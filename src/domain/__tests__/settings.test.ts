@@ -11,11 +11,15 @@ describe('parseSettings', () => {
       sound: false,
       vibration: false,
       appearance: 'dark',
+      reminder: false,
+      reminderTime: 'evening',
     });
     expect(parseSettings('{"sound":false,"vibration":"yes","appearance":"purple"}')).toEqual({
       sound: false,
       vibration: true,
       appearance: 'system',
+      reminder: false,
+      reminderTime: 'evening',
     });
   });
 

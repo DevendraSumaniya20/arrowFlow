@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BackHandler, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
-import { useAppSelector, useOutboxSync } from './src/store/hooks';
+import { useAppSelector, useOutboxSync, useReminderSync } from './src/store/hooks';
 import { createAppStore } from './src/store/store';
 import { AchievementsScreen } from './src/ui/screens/AchievementsScreen';
 import { HomeScreen } from './src/ui/screens/HomeScreen';
@@ -41,6 +41,7 @@ function Root() {
   const daily = (date: string) => setRoute({ name: 'daily', date });
 
   useOutboxSync();
+  useReminderSync();
 
   // Android hardware back returns home instead of closing the app.
   useEffect(() => {

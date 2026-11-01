@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useProgress, useSettings } from '../../store/hooks';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { REMINDER_TIMES } from '../../domain/reminder';
+import { ensureReminderPermission } from '../../services/reminder';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Palette, rounded, type, usePalette, useStyles } from '../theme';
 
@@ -17,6 +19,19 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const { settings, updateSettings } = useSettings();
   const { resetProgress } = useProgress();
   const insets = useSafeAreaInsets();
+  const [blocked, setBlocked] = useState(false);
+
+  const toggleReminder = async (on: boolean) => {
+    if (!on) {
+      updateSettings({ reminder: false });
+      return;
+    }
+    const allowed = await ensureReminderPermission().catch(() => false);
+    setBlocked(!allowed);
+    if (allowed) {
+      updateSettings({ reminder: true });
+    }
+  };
   // iOS shows this as a page sheet below the status bar; Android goes full screen.
   const pad =
     Platform.OS === 'ios' ? { top: 0, bottom: 16 } : { top: insets.top, bottom: insets.bottom + 16 };
@@ -76,6 +91,43 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           />
         </View>
 
+        <Text style={styles.sectionHeader}>DAILY REMINDER</Text>
+        <View style={styles.group}>
+          <ToggleRow
+            testID="reminder-switch"
+            label="Remind Me"
+            value={settings.reminder}
+            onChange={toggleReminder}
+          />
+          {settings.reminder && (
+            <>
+              <View style={styles.separator} />
+              <View style={styles.padded}>
+                <SegmentedControl
+                  testIDPrefix="reminder-time"
+                  options={REMINDER_TIMES.map(t => [t.key, t.label] as [typeof t.key, string])}
+                  value={settings.reminderTime}
+                  onChange={reminderTime => updateSettings({ reminderTime })}
+                />
+              </View>
+            </>
+          )}
+        </View>
+        {blocked ? (
+          <Text style={styles.footer} testID="reminder-blocked">
+            Notifications are turned off for Arrow Flow.{' '}
+            <Text style={styles.link} onPress={() => Linking.openSettings()} accessibilityRole="link">
+              Open Settings
+            </Text>
+          </Text>
+        ) : (
+          <Text style={styles.footer}>
+            {settings.reminder
+              ? `Every day at ${timeLabel(settings.reminderTime)}. Skipped on days you've already cleared the daily.`
+              : 'A gentle nudge when the new daily challenge is waiting.'}
+          </Text>
+        )}
+
         <Text style={styles.sectionHeader}>HOW TO PLAY</Text>
         <View style={styles.group}>
           {RULES.map((rule, i) => (
@@ -100,6 +152,14 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       </ScrollView>
     </View>
   );
+}
+
+function timeLabel(key: string) {
+  const t = REMINDER_TIMES.find(r => r.key === key)!;
+  return new Date(2000, 0, 1, t.hour, t.minute).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 function ToggleRow({
@@ -158,4 +218,5 @@ const makeStyles = (c: Palette) =>
     rule: { ...type.body, color: c.text, lineHeight: 22, paddingVertical: 11, paddingHorizontal: 16 },
     destructive: { ...type.body, color: c.danger },
     footer: { ...type.footnote, color: c.muted, marginTop: 6, marginHorizontal: 16 },
+    link: { color: c.accent },
   });

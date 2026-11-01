@@ -8,10 +8,12 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "e2e:android": "maestro test -e APP_ID=com.arrowswap .maestro",
-    "e2e:ios": "maestro test -e APP_ID=org.reactjs.native.example.ArrowSwap .maestro"
+    "e2e:android": "npm run android:reverse && maestro test -e APP_ID=com.arrowswap .maestro",
+    "e2e:ios": "maestro test -e APP_ID=org.reactjs.native.example.ArrowSwap .maestro",
+    "android:reverse": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:3000 tcp:3000"
   },
   "dependencies": {
+    "@notifee/react-native": "9.1.8",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@reduxjs/toolkit": "2.13.0",
     "react": "19.3.0",

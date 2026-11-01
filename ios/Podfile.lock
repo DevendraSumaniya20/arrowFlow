@@ -1955,6 +1955,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNNotifee (9.1.8):
+    - React-Core
+    - RNNotifee/NotifeeCore (= 9.1.8)
+  - RNNotifee/NotifeeCore (9.1.8):
+    - React-Core
   - RNSVG (15.16.0):
     - hermes-engine
     - RCTRequired
@@ -2096,6 +2101,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - RNAudioAPI (from `../node_modules/react-native-audio-api`)
+  - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNSVG (from `../node_modules/react-native-svg`)
   - SocketRocket (from `build/rndeps-facades/SocketRocket`)
   - Yoga (from `build/rncore-facades/Yoga`)
@@ -2276,6 +2282,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
   RNAudioAPI:
     :path: "../node_modules/react-native-audio-api"
+  RNNotifee:
+    :path: "../node_modules/@notifee/react-native"
   RNSVG:
     :path: "../node_modules/react-native-svg"
   SocketRocket:
@@ -2370,11 +2378,12 @@ SPEC CHECKSUMS:
   ReactCodegen: 3840312f5071bb6b953b35a029c5c6dcf06b435e
   ReactCommon: b63ce798b898ed77c6cfdeb80b18080161f52ed5
   ReactNativeDependencies: a5164c3ebbe90d992022b5d9cbabbf770a6d7d05
-  RNAudioAPI: 9d6df1d51d265b2dbbd28481438c4cdb2a16099d
+  RNAudioAPI: 95d3f611e27fe6bf31777033fb64a8e477fbc9a2
+  RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNSVG: c35beed3dcf6fd14b50ca1fc0d4214a17ec5334d
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
 
-PODFILE CHECKSUM: 2273c35f2f5268b37761d5b46d59dafa5c921b22
+PODFILE CHECKSUM: a681e9e42899950a2335ee1a3ad9f6ba3bd8da45
 
 COCOAPODS: 1.15.2

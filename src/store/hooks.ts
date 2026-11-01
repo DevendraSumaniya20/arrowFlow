@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { PendingResult } from '../data/storage';
 import { RunStats } from '../domain/achievements';
 import { Settings } from '../domain/settings';
+import { syncReminders } from '../services/reminder';
 import { flushResults, registerPlayer, renamePlayer, submitResult } from './playerSlice';
 import { dailyWon, levelWon, progressReset } from './progressSlice';
 import { settingsUpdated } from './settingsSlice';
@@ -76,4 +77,20 @@ export function useOutboxSync() {
     const sub = AppState.addEventListener('change', s => s === 'active' && dispatch(flushResults()));
     return () => sub.remove();
   }, [token, dispatch]);
+}
+
+/** Keeps scheduled reminders in step with the setting and cleared dailies. */
+export function useReminderSync() {
+  const { reminder, reminderTime } = useAppSelector(s => s.settings.value);
+  const loaded = useAppSelector(s => s.settings.loaded && s.progress.loaded);
+  const daily = useAppSelector(s => s.progress.value.daily);
+  useEffect(() => {
+    if (!loaded) {
+      return;
+    }
+    const sync = () => syncReminders(reminder, reminderTime, daily).catch(() => {});
+    sync();
+    const sub = AppState.addEventListener('change', s => s === 'active' && sync());
+    return () => sub.remove();
+  }, [loaded, reminder, reminderTime, daily]);
 }

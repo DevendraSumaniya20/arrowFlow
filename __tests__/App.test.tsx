@@ -49,6 +49,8 @@ test('settings toggles are saved to storage', async () => {
     sound: false,
     vibration: true,
     appearance: 'system',
+    reminder: false,
+    reminderTime: 'evening',
   });
 });
 
@@ -200,4 +202,34 @@ test('appearance: Dark overrides the system theme and is saved', async () => {
 
   expect(rootBg()).toBe('#000000');
   expect(JSON.parse(await AsyncStorage.getItem('arrowswap/settings/v1')).appearance).toBe('dark');
+});
+
+test('reminder: a refusal keeps it off and explains how to allow it', async () => {
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  const notifee = require('@notifee/react-native').default;
+  await AsyncStorage.clear();
+  notifee.getNotificationSettings.mockResolvedValueOnce({ authorizationStatus: 0 });
+  notifee.requestPermission.mockResolvedValueOnce({ authorizationStatus: 0 });
+
+  let root!: ReactTestRenderer.ReactTestRenderer;
+  await ReactTestRenderer.act(() => {
+    root = ReactTestRenderer.create(<App />);
+  });
+  const byId = (id: string) => root.root.findAll(n => n.props.testID === id);
+  for (let i = 0; i < 20 && byId('settings-button').length === 0; i++) {
+    await flush();
+  }
+  await ReactTestRenderer.act(() => byId('settings-button')[0].props.onPress());
+  const toggle = () => byId('reminder-switch').find(n => n.props.onValueChange)!;
+
+  await ReactTestRenderer.act(async () => toggle().props.onValueChange(true));
+  await flush();
+  expect(toggle().props.value).toBe(false);
+  expect(byId('reminder-blocked').length).toBeGreaterThan(0);
+
+  await ReactTestRenderer.act(async () => toggle().props.onValueChange(true)); // allowed now (mock default)
+  await flush();
+  expect(toggle().props.value).toBe(true);
+  expect(byId('reminder-time-evening').length).toBeGreaterThan(0);
+  expect(JSON.parse(await AsyncStorage.getItem('arrowswap/settings/v1')).reminder).toBe(true);
 });
