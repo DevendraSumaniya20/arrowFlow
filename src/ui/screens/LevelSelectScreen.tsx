@@ -3,7 +3,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useProgress } from '../../state/ProgressContext';
 import { Lock, Stars } from '../components/Icons';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { Palette, usePalette, useStyles } from '../theme';
+import { Palette, rounded, type, usePalette, useStyles } from '../theme';
 
 interface Props {
   onPlay: (level: number) => void;
@@ -22,7 +22,7 @@ export function LevelSelectScreen({ onPlay, onBack }: Props) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Levels" onBack={onBack} />
+      <ScreenHeader title="Levels" onBack={onBack} backLabel="Home" large />
       <FlatList
         data={levels}
         numColumns={5}
@@ -67,23 +67,21 @@ export function LevelSelectScreen({ onPlay, onBack }: Props) {
 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
-    root: { flex: 1, paddingHorizontal: 12 },
+    root: { flex: 1, paddingHorizontal: 16 },
     list: { paddingTop: 8, paddingBottom: 24, gap: 10 },
     row: { gap: 10 },
     tile: {
       flex: 1,
       aspectRatio: 1,
-      borderRadius: 16,
+      ...rounded(14),
       backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.border,
       alignItems: 'center',
       justifyContent: 'center',
     },
     current: { borderColor: c.accent, borderWidth: 2 },
-    locked: { backgroundColor: c.bg },
-    pressed: { opacity: 0.7 },
-    num: { color: c.text, fontSize: 20, fontWeight: '800', fontVariant: ['tabular-nums'] },
+    locked: { backgroundColor: c.surfaceAlt },
+    pressed: { opacity: 0.6 },
+    num: { color: c.text, ...type.title3, fontVariant: ['tabular-nums'] },
     numCurrent: { color: c.accent },
     stars: { flexDirection: 'row', marginTop: 3 },
   });

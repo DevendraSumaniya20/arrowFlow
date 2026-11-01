@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AccessibilityInfo, Animated, StyleSheet, Text, View } from 'react-native';
-import { Palette, useStyles } from '../theme';
+import { Palette, rounded, type, useStyles } from '../theme';
 import { Button } from './Button';
 import { Stars } from './Icons';
 
@@ -72,7 +72,7 @@ const makeStyles = (c: Palette) =>
       width: '100%',
       maxWidth: 360,
       backgroundColor: c.surface,
-      borderRadius: 28,
+      ...rounded(24),
       paddingHorizontal: 24,
       paddingTop: 28,
       paddingBottom: 24,
@@ -83,9 +83,9 @@ const makeStyles = (c: Palette) =>
       shadowOffset: { width: 0, height: 12 },
       elevation: 8,
     },
-    title: { color: c.text, fontSize: 28, fontWeight: '800' },
+    title: { color: c.text, ...type.title1 },
     stars: { flexDirection: 'row', gap: 6, marginTop: 14 },
-    score: { color: c.muted, fontSize: 17, marginTop: 10, fontVariant: ['tabular-nums'] },
-    note: { color: c.accent, fontSize: 16, fontWeight: '700', marginTop: 8, textAlign: 'center' },
+    score: { color: c.muted, ...type.body, marginTop: 10, fontVariant: ['tabular-nums'] },
+    note: { color: c.accent, ...type.headline, marginTop: 8, textAlign: 'center' },
     actions: { alignSelf: 'stretch', gap: 10, marginTop: 24 },
   });

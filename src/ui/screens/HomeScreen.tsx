@@ -10,7 +10,7 @@ import { Grid, Podium } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { SettingsButton } from '../components/SettingsButton';
 import { useToday } from '../hooks/useToday';
-import { Palette, useStyles } from '../theme';
+import { Palette, type, useStyles } from '../theme';
 
 interface Props {
   onPlay: (level: number) => void;
@@ -31,13 +31,13 @@ export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard }: Props) 
   return (
     <ScrollView contentContainerStyle={styles.root}>
       <View style={styles.topBar}>
-        <View style={styles.brand}>
-          <Logo size={34} />
-          <Text style={styles.wordmark} accessibilityRole="header">
-            Arrow Flow
-          </Text>
-        </View>
         <SettingsButton />
+      </View>
+      <View style={styles.brand}>
+        <Logo size={36} />
+        <Text style={styles.wordmark} accessibilityRole="header">
+          Arrow Flow
+        </Text>
       </View>
 
       <DailyCard
@@ -91,14 +91,14 @@ export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard }: Props) 
 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
-    root: { flexGrow: 1, padding: 20, gap: 28 },
-    topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    root: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 16, gap: 20 },
+    topBar: { minHeight: 44, alignItems: 'flex-end', justifyContent: 'center', marginBottom: -16 },
     brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    wordmark: { color: c.text, fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
+    wordmark: { color: c.text, ...type.largeTitle },
     campaign: { flex: 1, justifyContent: 'flex-end', gap: 6 },
     previewWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 12 },
-    level: { color: c.text, fontSize: 44, fontWeight: '800', letterSpacing: -1 },
-    summary: { color: c.muted, fontSize: 15, fontVariant: ['tabular-nums'] },
+    level: { color: c.text, ...type.largeTitle },
+    summary: { color: c.muted, ...type.subhead, fontVariant: ['tabular-nums'] },
     play: { marginTop: 18 },
     row: { flexDirection: 'row', gap: 12, marginTop: 6 },
     flex: { flex: 1 },

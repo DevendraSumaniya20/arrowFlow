@@ -17,7 +17,7 @@ import { Stars } from '../components/Icons';
 import { ScoreArrow } from '../components/ScoreArrow';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useToday } from '../hooks/useToday';
-import { Palette, usePalette, useStyles } from '../theme';
+import { Palette, rounded, type, usePalette, useStyles } from '../theme';
 
 export type LeaderboardTab = 'today' | 'all';
 
@@ -41,6 +41,7 @@ function timeLeft(now: Date) {
 
 export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }: Props) {
   const styles = useStyles(makeStyles);
+  const c = usePalette();
   const { player } = usePlayer();
   const [tab, setTab] = useState<LeaderboardTab>(initialTab);
   const [load, setLoad] = useState<Load>({ state: 'loading' });
@@ -88,7 +89,7 @@ export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }:
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Leaderboard" onBack={onBack} />
+      <ScreenHeader title="Leaderboard" onBack={onBack} backLabel="Home" large />
 
       <Segmented value={tab} onChange={setTab} />
       <Text style={styles.caption}>
@@ -101,7 +102,7 @@ export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }:
 
       {load.state === 'loading' && (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={c.muted} />
         </View>
       )}
 
@@ -134,14 +135,22 @@ export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }:
           keyExtractor={e => e.playerId}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-          renderItem={({ item }) => (
-            <Row entry={item} top={top} mine={item.playerId === board.me?.playerId} tab={tab} />
+          ItemSeparatorComponent={Separator}
+          renderItem={({ item, index }) => (
+            <Row
+              entry={item}
+              top={top}
+              mine={item.playerId === board.me?.playerId}
+              tab={tab}
+              first={index === 0}
+              last={index === board.entries.length - 1}
+            />
           )}
           ListFooterComponent={
             board.me && !meListed ? (
               <View style={styles.pinned}>
-                <Text style={styles.gap}>···</Text>
-                <Row entry={board.me} top={top} mine tab={tab} />
+                <Text style={styles.sectionHeader}>YOUR RANK</Text>
+                <Row entry={board.me} top={top} mine tab={tab} first last />
               </View>
             ) : undefined
           }
@@ -177,13 +186,36 @@ function Segmented({ value, onChange }: { value: LeaderboardTab; onChange: (t: L
   );
 }
 
-function Row({ entry, top, mine, tab }: { entry: Entry; top: number; mine: boolean; tab: LeaderboardTab }) {
+function Separator() {
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={styles.separatorWrap}>
+      <View style={styles.separator} />
+    </View>
+  );
+}
+
+function Row({
+  entry,
+  top,
+  mine,
+  tab,
+  first,
+  last,
+}: {
+  entry: Entry;
+  top: number;
+  mine: boolean;
+  tab: LeaderboardTab;
+  first?: boolean;
+  last?: boolean;
+}) {
   const styles = useStyles(makeStyles);
   const c = usePalette();
   const detail = tab === 'all' && entry.levels !== undefined ? `${entry.levels} levels` : null;
   return (
     <View
-      style={[styles.row, mine && styles.rowMine]}
+      style={[styles.row, first && styles.rowFirst, last && styles.rowLast, mine && styles.rowMine]}
       accessible
       accessibilityLabel={`Rank ${entry.rank}, ${entry.nickname}${mine ? ' (you)' : ''}, ${entry.score} points`}>
       <Text style={[styles.rank, entry.rank <= 3 && styles.rankTop]}>{entry.rank}</Text>
@@ -266,7 +298,7 @@ function Identity() {
     <View style={styles.join}>
       <Text style={styles.joinTitle}>{player ? 'Change your name' : 'Join the leaderboard'}</Text>
       {!player && (
-        <Text style={styles.message}>
+        <Text style={styles.joinMessage}>
           {expired
             ? 'Your leaderboard name is no longer recognised. Join again; your waiting results will be posted.'
             : 'Pick a name to rank your daily runs. No account needed; wins from this phone count.'}
@@ -306,88 +338,90 @@ function Identity() {
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
     root: { flex: 1, paddingHorizontal: 16 },
-    segmented: {
-      flexDirection: 'row',
-      backgroundColor: c.surfaceAlt,
-      borderRadius: 14,
-      padding: 4,
-      marginTop: 4,
-    },
-    segment: { flex: 1, minHeight: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    // Apple segmented control metrics.
+    segmented: { flexDirection: 'row', backgroundColor: c.surfaceAlt, ...rounded(9), padding: 2 },
+    segment: { flex: 1, minHeight: 32, ...rounded(7), alignItems: 'center', justifyContent: 'center' },
     segmentOn: {
       backgroundColor: c.surface,
       shadowColor: '#000',
-      shadowOpacity: 0.08,
+      shadowOpacity: 0.12,
       shadowRadius: 4,
       shadowOffset: { width: 0, height: 2 },
-      elevation: 1,
+      elevation: 2,
     },
-    segmentText: { color: c.muted, fontSize: 15, fontWeight: '700' },
-    segmentTextOn: { color: c.text },
-    caption: { color: c.muted, fontSize: 13, textAlign: 'center', marginTop: 10 },
+    segmentText: { ...type.footnote, fontWeight: '500', color: c.text },
+    segmentTextOn: { fontWeight: '600' },
+    caption: { color: c.muted, ...type.footnote, textAlign: 'center', marginTop: 10 },
     identity: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 14,
+      minHeight: 44,
+      marginTop: 12,
+      marginBottom: 8,
+      paddingHorizontal: 16,
+      ...rounded(12),
+      backgroundColor: c.surface,
     },
-    identityText: { color: c.muted, fontSize: 15 },
-    identityName: { color: c.text, fontWeight: '800' },
-    link: { color: c.accent, fontSize: 15, fontWeight: '700' },
+    identityText: { color: c.muted, ...type.body },
+    identityName: { color: c.text, fontWeight: '600' },
+    link: { color: c.accent, ...type.body },
     join: {
-      marginTop: 14,
-      marginBottom: 6,
+      marginTop: 12,
+      marginBottom: 8,
       padding: 16,
       gap: 10,
-      borderRadius: 20,
+      ...rounded(12),
       backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.border,
     },
-    joinTitle: { color: c.text, fontSize: 18, fontWeight: '800' },
+    joinTitle: { color: c.text, ...type.headline },
     joinRow: { flexDirection: 'row', gap: 10 },
+    joinMessage: { color: c.muted, ...type.subhead, lineHeight: 20 },
     input: {
       flex: 1,
-      minHeight: 52,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      fontSize: 17,
+      minHeight: 50,
+      ...rounded(10),
+      paddingHorizontal: 12,
+      ...type.body,
       color: c.text,
-      backgroundColor: c.bg,
-      borderWidth: 1,
-      borderColor: c.border,
+      backgroundColor: c.surfaceAlt,
     },
-    error: { color: c.danger, fontSize: 14 },
+    error: { color: c.danger, ...type.footnote },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 16 },
-    emptyTitle: { color: c.text, fontSize: 19, fontWeight: '800', textAlign: 'center' },
-    message: { color: c.muted, fontSize: 15, lineHeight: 21, textAlign: 'center' },
-    list: { paddingBottom: 24 },
+    emptyTitle: { color: c.text, ...type.title3, textAlign: 'center' },
+    message: { color: c.muted, ...type.subhead, lineHeight: 20, textAlign: 'center' },
+    list: { paddingTop: 8, paddingBottom: 24 },
+    // Inset grouped list: rows share one rounded card, hairlines between them.
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
-      borderRadius: 16,
+      minHeight: 60,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      backgroundColor: c.surface,
     },
+    rowFirst: { borderTopLeftRadius: 12, borderTopRightRadius: 12, borderCurve: 'continuous' },
+    rowLast: { borderBottomLeftRadius: 12, borderBottomRightRadius: 12, borderCurve: 'continuous' },
     rowMine: { backgroundColor: c.accentSoft },
+    separatorWrap: { backgroundColor: c.surface },
+    separator: { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginLeft: 60 },
     rank: {
       width: 32,
       color: c.muted,
-      fontSize: 17,
-      fontWeight: '800',
+      ...type.headline,
       textAlign: 'center',
       fontVariant: ['tabular-nums'],
     },
     rankTop: { color: c.text },
     rowBody: { flex: 1, gap: 6 },
     rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 },
-    name: { flex: 1, color: c.text, fontSize: 16, fontWeight: '700' },
-    you: { color: c.accent, fontSize: 13, fontWeight: '800' },
-    score: { color: c.text, fontSize: 16, fontWeight: '800', fontVariant: ['tabular-nums'] },
+    name: { flex: 1, color: c.text, ...type.body },
+    you: { color: c.accent, ...type.footnote, fontWeight: '600' },
+    score: { color: c.text, ...type.headline, fontVariant: ['tabular-nums'] },
     rowBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     starRow: { flexDirection: 'row' },
-    detail: { color: c.muted, fontSize: 12, fontVariant: ['tabular-nums'] },
-    pinned: { marginTop: 4 },
-    gap: { color: c.muted, textAlign: 'center', fontSize: 16, letterSpacing: 2 },
+    detail: { color: c.muted, ...type.caption, fontVariant: ['tabular-nums'] },
+    pinned: { marginTop: 20 },
+    sectionHeader: { color: c.muted, ...type.footnote, marginLeft: 16, marginBottom: 6 },
   });

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { generateDailyLevel } from '../../domain/daily';
 import { DailyBest } from '../../domain/progress';
-import { Palette, useStyles } from '../theme';
+import { Palette, rounded, type, useStyles } from '../theme';
 import { BoardPreview } from './BoardPreview';
 import { ChevronRight, Flame, Stars } from './Icons';
 
@@ -87,28 +87,26 @@ const makeStyles = (c: Palette) =>
       alignItems: 'center',
       gap: 14,
       padding: 14,
-      borderRadius: 24,
+      ...rounded(20),
       backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.border,
     },
-    pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
+    pressed: { opacity: 0.7 },
     preview: {
       padding: 6,
-      borderRadius: 16,
+      ...rounded(14),
       backgroundColor: c.bg,
     },
     body: { flex: 1, gap: 2 },
-    title: { color: c.text, fontSize: 19, fontWeight: '800' },
-    date: { color: c.muted, fontSize: 14 },
+    title: { color: c.text, ...type.title3 },
+    date: { color: c.muted, ...type.subhead },
     week: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 10 },
     weekCol: { alignItems: 'center', gap: 3 },
     step: { width: 10, borderRadius: 3, backgroundColor: c.surfaceAlt },
     stepPast: { backgroundColor: c.dot },
     stepToday: { backgroundColor: c.accent },
-    weekDay: { color: c.muted, fontSize: 10, fontWeight: '600' },
-    weekDayToday: { color: c.accent, fontWeight: '800' },
+    weekDay: { color: c.muted, fontSize: 11, fontWeight: '600' }, // caption2: Apple's 11pt floor
+    weekDayToday: { color: c.accent, fontWeight: '700' },
     status: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
-    statusText: { color: c.muted, fontSize: 13, fontWeight: '600', marginLeft: 2 },
-    streak: { color: c.accent, fontSize: 13, fontWeight: '700' },
+    statusText: { color: c.muted, ...type.footnote, marginLeft: 2 },
+    streak: { color: c.accent, ...type.footnote, fontWeight: '600' },
   });

@@ -1,39 +1,55 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Palette, useStyles } from '../theme';
+import { Palette, type, useStyles } from '../theme';
 import { ChevronLeft } from './Icons';
 
 interface Props {
   title: string;
   onBack: () => void;
+  backLabel?: string;
   right?: React.ReactNode;
+  /** iOS large title below the bar, for top-level screens. */
+  large?: boolean;
 }
 
-export function ScreenHeader({ title, onBack, right }: Props) {
+export function ScreenHeader({ title, onBack, backLabel = 'Back', right, large }: Props) {
   const styles = useStyles(makeStyles);
   return (
-    <View style={styles.header}>
-      <Pressable
-        onPress={onBack}
-        hitSlop={8}
-        style={styles.side}
-        testID="back-button"
-        accessibilityRole="button"
-        accessibilityLabel="Back">
-        <ChevronLeft size={28} />
-      </Pressable>
-      <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
-        {title}
-      </Text>
-      <View style={[styles.side, styles.right]}>{right}</View>
+    <View>
+      <View style={styles.bar}>
+        <Pressable
+          onPress={onBack}
+          hitSlop={8}
+          style={({ pressed }) => [styles.back, pressed && styles.pressed]}
+          testID="back-button"
+          accessibilityRole="button"
+          accessibilityLabel={backLabel}>
+          <ChevronLeft size={24} />
+          <Text style={styles.backLabel}>{backLabel}</Text>
+        </Pressable>
+        {!large && (
+          <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
+            {title}
+          </Text>
+        )}
+        <View style={styles.right}>{right}</View>
+      </View>
+      {large && (
+        <Text style={styles.largeTitle} accessibilityRole="header" numberOfLines={1}>
+          {title}
+        </Text>
+      )}
     </View>
   );
 }
 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
-    header: { flexDirection: 'row', alignItems: 'center', minHeight: 52 },
-    side: { width: 48, height: 48, justifyContent: 'center' },
-    right: { alignItems: 'flex-end' },
-    title: { flex: 1, textAlign: 'center', color: c.text, fontSize: 18, fontWeight: '700' },
+    bar: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
+    back: { flexDirection: 'row', alignItems: 'center', minWidth: 88, minHeight: 44, marginLeft: -8 },
+    pressed: { opacity: 0.5 },
+    backLabel: { ...type.body, color: c.accent, marginLeft: -2 },
+    title: { flex: 1, textAlign: 'center', ...type.headline, color: c.text },
+    right: { minWidth: 88, minHeight: 44, alignItems: 'flex-end', justifyContent: 'center' },
+    largeTitle: { ...type.largeTitle, color: c.text, marginTop: 2, marginBottom: 8 },
   });

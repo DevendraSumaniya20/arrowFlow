@@ -1,10 +1,11 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { Palette, usePalette, useStyles } from '../theme';
+import { Palette, rounded, type, usePalette, useStyles } from '../theme';
 
 interface Props {
   label: string;
   onPress: () => void;
+  /** primary = filled; ghost = Apple "gray" (tinted fill); destructive = gray with red text. */
   variant?: 'primary' | 'ghost' | 'destructive';
   disabled?: boolean;
   style?: ViewStyle;
@@ -26,7 +27,7 @@ export function Button({ label, onPress, variant = 'primary', disabled, style, t
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        primary ? styles.primary : styles.ghost,
+        primary ? styles.primary : styles.gray,
         pressed && styles.pressed,
         disabled && styles.disabled,
         style,
@@ -36,7 +37,7 @@ export function Button({ label, onPress, variant = 'primary', disabled, style, t
         <Text
           style={[
             styles.label,
-            { color: primary ? c.onAccent : variant === 'destructive' ? c.danger : c.text },
+            { color: primary ? c.onAccent : variant === 'destructive' ? c.danger : c.accent },
           ]}>
           {label}
         </Text>
@@ -48,16 +49,16 @@ export function Button({ label, onPress, variant = 'primary', disabled, style, t
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
     base: {
-      minHeight: 52,
+      minHeight: 50,
       paddingHorizontal: 20,
-      borderRadius: 16,
+      ...rounded(12),
       alignItems: 'center',
       justifyContent: 'center',
     },
-    row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     primary: { backgroundColor: c.accent },
-    ghost: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
-    pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
-    disabled: { opacity: 0.45 },
-    label: { fontSize: 17, fontWeight: '700' },
+    gray: { backgroundColor: c.surfaceAlt },
+    pressed: { opacity: 0.6 },
+    disabled: { opacity: 0.4 },
+    label: { ...type.headline },
   });

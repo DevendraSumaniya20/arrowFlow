@@ -10,7 +10,7 @@ import { ResultOverlay } from '../components/ResultOverlay';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SettingsButton } from '../components/SettingsButton';
 import { useGameFeedback } from '../hooks/useGameFeedback';
-import { Palette, useStyles } from '../theme';
+import { Palette, type, useStyles } from '../theme';
 
 // RN provides performance.now() at runtime but its TS types omit it.
 const monotonicNow = (): number =>
@@ -202,24 +202,22 @@ const makeStyles = (c: Palette) =>
     },
     chip: {
       minWidth: 76,
-      paddingHorizontal: 10,
+      paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 10,
+      borderRadius: 999,
       backgroundColor: c.surfaceAlt,
       alignItems: 'center',
     },
-    chipText: { color: c.text, fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'] },
+    chipText: { color: c.text, ...type.footnote, fontWeight: '600', fontVariant: ['tabular-nums'] },
     hearts: { flexDirection: 'row', gap: 4 },
-    muted: { color: c.muted, fontSize: 13, textAlign: 'center', marginTop: 10 },
+    muted: { color: c.muted, ...type.footnote, textAlign: 'center', marginTop: 10 },
     boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     footer: { flexDirection: 'row', justifyContent: 'center', gap: 28, paddingVertical: 16 },
     round: {
       width: 60,
       height: 60,
       borderRadius: 30,
-      backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.border,
+      backgroundColor: c.surfaceAlt,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -235,5 +233,5 @@ const makeStyles = (c: Palette) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    badgeText: { color: c.onAccent, fontSize: 12, fontWeight: '800' },
+    badgeText: { color: c.onAccent, ...type.caption, fontWeight: '700' },
   });
