@@ -6,7 +6,7 @@ import { dailyStreak, totalScore, totalStars } from '../../domain/progress';
 import { BoardPreview } from '../components/BoardPreview';
 import { Button } from '../components/Button';
 import { DailyCard } from '../components/DailyCard';
-import { Grid, Podium } from '../components/Icons';
+import { Grid, Podium, Trophy } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { SettingsButton } from '../components/SettingsButton';
 import { useToday } from '../hooks/useToday';
@@ -17,9 +17,10 @@ interface Props {
   onDaily: (date: string) => void;
   onLevels: () => void;
   onLeaderboard: () => void;
+  onAchievements: () => void;
 }
 
-export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard }: Props) {
+export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard, onAchievements }: Props) {
   const styles = useStyles(makeStyles);
   const { progress } = useProgress();
   const { today } = useToday();
@@ -31,6 +32,15 @@ export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard }: Props) 
   return (
     <ScrollView contentContainerStyle={styles.root}>
       <View style={styles.topBar}>
+        <Pressable
+          testID="achievements-button"
+          onPress={onAchievements}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Achievements"
+          style={({ pressed }) => [styles.toolbarButton, pressed && styles.pressed]}>
+          <Trophy />
+        </Pressable>
         <SettingsButton />
       </View>
       <View style={styles.brand}>
@@ -92,7 +102,16 @@ export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard }: Props) 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
     root: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 16, gap: 20 },
-    topBar: { minHeight: 44, alignItems: 'flex-end', justifyContent: 'center', marginBottom: -16 },
+    topBar: {
+      minHeight: 44,
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: 20,
+      marginBottom: -16,
+    },
+    toolbarButton: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+    pressed: { opacity: 0.5 },
     brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     wordmark: { color: c.text, ...type.largeTitle },
     campaign: { flex: 1, justifyContent: 'flex-end', gap: 6 },

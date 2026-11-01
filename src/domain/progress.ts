@@ -8,9 +8,10 @@ export interface Progress {
   stars: Record<number, number>;
   best: Record<number, number>; // best score per level
   daily: Record<string, DailyBest>; // best per daily date (YYYY-MM-DD)
+  achievements: Record<string, string>; // achievement id -> ISO time earned
 }
 
-export const EMPTY_PROGRESS: Progress = { unlocked: 1, stars: {}, best: {}, daily: {} };
+export const EMPTY_PROGRESS: Progress = { unlocked: 1, stars: {}, best: {}, daily: {}, achievements: {} };
 
 export function applyWin(
   p: Progress,
@@ -66,6 +67,9 @@ const isDailyRecord = (v: unknown): v is Record<string, DailyBest> =>
     d => typeof d?.score === 'number' && typeof d?.stars === 'number',
   );
 
+const isStringRecord = (v: unknown): v is Record<string, string> =>
+  typeof v === 'object' && v !== null && Object.values(v).every(x => typeof x === 'string');
+
 /** Stored data may be corrupt or from an old version: fall back to empty. */
 export function parseProgress(raw: string | null): Progress {
   if (!raw) {
@@ -79,9 +83,10 @@ export function parseProgress(raw: string | null): Progress {
       isNumberRecord(v.stars) &&
       isNumberRecord(v.best)
     ) {
-      // `daily` arrived in a later version: older saves simply have none.
+      // `daily` and `achievements` arrived in later versions: older saves have none.
       const daily = isDailyRecord(v.daily) ? v.daily : {};
-      return { unlocked: v.unlocked, stars: v.stars, best: v.best, daily };
+      const achievements = isStringRecord(v.achievements) ? v.achievements : {};
+      return { unlocked: v.unlocked, stars: v.stars, best: v.best, daily, achievements };
     }
   } catch {}
   return EMPTY_PROGRESS;

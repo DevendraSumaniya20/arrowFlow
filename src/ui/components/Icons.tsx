@@ -135,3 +135,38 @@ export function Gear(p: IconProps) {
     </Stroke>
   );
 }
+
+export function Undo(p: IconProps) {
+  return (
+    <Stroke {...p}>
+      <Path d="M9 14L4 9l5-5" />
+      <Path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </Stroke>
+  );
+}
+
+export function Trophy(p: IconProps) {
+  return (
+    <Stroke {...p}>
+      <Path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z" />
+      <Path d="M17 6h3v1a3 3 0 0 1-3 3M7 6H4v1a3 3 0 0 0 3 3" />
+    </Stroke>
+  );
+}
+
+export function Share(p: IconProps) {
+  return (
+    <Stroke {...p}>
+      <Path d="M12 3v12M8 7l4-4 4 4" />
+      <Path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+    </Stroke>
+  );
+}
+
+export function Bell(p: IconProps) {
+  return (
+    <Stroke {...p}>
+      <Path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2zM10 21h4" />
+    </Stroke>
+  );
+}

@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { AppState } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { PendingResult } from '../data/storage';
+import { RunStats } from '../domain/achievements';
 import { Settings } from '../domain/settings';
 import { flushResults, registerPlayer, renamePlayer, submitResult } from './playerSlice';
 import { dailyWon, levelWon, progressReset } from './progressSlice';
@@ -27,11 +28,13 @@ export function useProgress() {
   const dispatch = useAppDispatch();
   const { loaded, value } = useAppSelector(s => s.progress);
   const recordWin = useCallback(
-    (level: number, stars: number, score: number) => dispatch(levelWon({ level, stars, score })),
+    (level: number, stars: number, score: number, run?: RunStats) =>
+      dispatch(levelWon({ level, stars, score, run })),
     [dispatch],
   );
   const recordDailyWin = useCallback(
-    (date: string, stars: number, score: number) => dispatch(dailyWon({ date, stars, score })),
+    (date: string, stars: number, score: number, run?: RunStats) =>
+      dispatch(dailyWon({ date, stars, score, run })),
     [dispatch],
   );
   const resetProgress = useCallback(() => dispatch(progressReset()), [dispatch]);

@@ -4,6 +4,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { Provider } from 'react-redux';
 import { useAppSelector, useOutboxSync } from './src/store/hooks';
 import { createAppStore } from './src/store/store';
+import { AchievementsScreen } from './src/ui/screens/AchievementsScreen';
 import { HomeScreen } from './src/ui/screens/HomeScreen';
 import { LeaderboardScreen, LeaderboardTab } from './src/ui/screens/LeaderboardScreen';
 import { LevelSelectScreen } from './src/ui/screens/LevelSelectScreen';
@@ -13,6 +14,7 @@ import { useIsDark, usePalette } from './src/ui/theme';
 type Route =
   | { name: 'home' }
   | { name: 'levels' }
+  | { name: 'achievements' }
   | { name: 'leaderboard'; tab?: LeaderboardTab }
   | { name: 'game'; level: number }
   | { name: 'daily'; date: string };
@@ -61,8 +63,11 @@ function Root() {
             onDaily={daily}
             onLevels={() => setRoute({ name: 'levels' })}
             onLeaderboard={() => setRoute({ name: 'leaderboard' })}
+            onAchievements={() => setRoute({ name: 'achievements' })}
           />
         );
+      case 'achievements':
+        return <AchievementsScreen onBack={home} />;
       case 'levels':
         return <LevelSelectScreen onPlay={play} onBack={home} />;
       case 'leaderboard':

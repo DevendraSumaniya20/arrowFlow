@@ -47,6 +47,7 @@ describe('app store', () => {
       stars: { 1: 3 },
       best: { 1: 120 },
       daily: { '2026-11-01': { score: 90, stars: 2 } },
+      achievements: {},
     });
     expect(JSON.parse((await AsyncStorage.getItem('arrowswap/settings/v1'))!).appearance).toBe('light');
     store.dispatch(progressReset());
