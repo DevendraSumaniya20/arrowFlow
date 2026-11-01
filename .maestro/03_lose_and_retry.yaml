@@ -2,12 +2,7 @@
 appId: ${APP_ID}
 name: Lose all lives and retry
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "play-button"
-    timeout: 60000
+- runFlow: common/launch_fresh.yaml
 - tapOn:
     id: "play-button"
 - extendedWaitUntil:

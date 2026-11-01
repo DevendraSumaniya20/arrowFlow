@@ -1,0 +1,21 @@
+# Shared launch (fresh install state), then wait for Home.
+# Debug builds on Android 17+ ask for local-network access to reach Metro
+# (React Native's dev support; release builds never ask). A data reset revokes
+# it, so accept the prompt when it shows up.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 5000

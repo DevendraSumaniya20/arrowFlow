@@ -3,12 +3,7 @@
 appId: ${APP_ID}
 name: Settings persist and reset progress
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "play-button"
-    timeout: 60000
+- runFlow: common/launch_fresh.yaml
 - tapOn:
     id: "settings-button"
 - assertVisible: "Settings"
@@ -27,12 +22,7 @@ name: Settings persist and reset progress
 - tapOn:
     id: "settings-close"
 - stopApp
-- launchApp:
-    clearState: false
-- extendedWaitUntil:
-    visible:
-      id: "play-button"
-    timeout: 60000
+- runFlow: common/launch_keep.yaml
 - tapOn:
     id: "play-button"
 - tapOn:

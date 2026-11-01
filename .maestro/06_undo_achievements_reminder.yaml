@@ -1,0 +1,56 @@
+# Undo gives a heart back, a win unlocks an achievement, and the daily
+# reminder can be switched on (notification permission pre-granted).
+appId: ${APP_ID}
+name: Undo, achievements and reminder
+---
+- runFlow: common/launch_fresh.yaml
+- tapOn:
+    id: "achievements-button"
+- assertVisible: "0 of 12 earned"
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "play-button"
+- extendedWaitUntil:
+    visible: "3 of 3 lives"
+    timeout: 15000
+- tapOn:
+    id: "arrow-blocked"
+    index: 0
+- assertVisible: "2 of 3 lives"
+- tapOn:
+    id: "undo-button"
+- assertVisible: "3 of 3 lives"
+- assertVisible: "Undo last mistake, 0 left"
+- repeat:
+    times: 60
+    while:
+      notVisible: "Level clear!"
+    commands:
+      # Optional: after the last tap the board is empty while the arrow flies off.
+      - tapOn:
+          id: "arrow-free"
+          index: 0
+          optional: true
+- assertVisible: "Level clear!"
+- assertVisible: "Achievement unlocked: First Flow"
+- tapOn:
+    id: "home-button"
+- tapOn:
+    id: "achievements-button"
+- assertVisible: "1 of 12 earned"
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "reminder-switch"
+- extendedWaitUntil:
+    visible:
+      id: "reminder-time-evening"
+    timeout: 10000
+- tapOn:
+    id: "reminder-time-morning"
+- assertVisible: "Every day at.*"
+- tapOn:
+    id: "settings-close"

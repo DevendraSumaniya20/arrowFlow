@@ -4,12 +4,7 @@
 appId: ${APP_ID}
 name: Daily challenge and leaderboard
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "play-button"
-    timeout: 60000
+- runFlow: common/launch_fresh.yaml
 - tapOn:
     id: "leaderboard-button"
 - assertVisible: "Join the leaderboard"

@@ -3,12 +3,7 @@
 appId: ${APP_ID}
 name: Solve level 1 and keep progress
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "play-button"
-    timeout: 60000
+- runFlow: common/launch_fresh.yaml
 - tapOn:
     id: "play-button"
 - assertVisible: "Level 1"
@@ -37,10 +32,5 @@ name: Solve level 1 and keep progress
     id: "back-button"
 - assertVisible: "Play level 2"
 - stopApp
-- launchApp:
-    clearState: false
-- extendedWaitUntil:
-    visible:
-      id: "play-button"
-    timeout: 60000
+- runFlow: common/launch_keep.yaml
 - assertVisible: "Play level 2"

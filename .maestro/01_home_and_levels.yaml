@@ -2,12 +2,7 @@
 appId: ${APP_ID}
 name: Home and level select
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible:
-      id: "play-button"
-    timeout: 60000
+- runFlow: common/launch_fresh.yaml
 - assertVisible: "Arrow Flow"
 - assertVisible:
     id: "play-button"
