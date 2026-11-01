@@ -3,9 +3,9 @@ import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { difficultyOf } from '../../domain/generator';
 import { clampDuration, MAX_LIVES, starsFor } from '../../domain/scoring';
 import { Level } from '../../domain/types';
-import { gameReducer, initGame, Move } from '../../state/gameReducer';
+import { canUndo, gameReducer, initGame, Move, usedHints, usedUndos } from '../../state/gameReducer';
 import { Board } from '../components/Board';
-import { Bulb, Heart, Restart } from '../components/Icons';
+import { Bulb, Heart, Restart, Undo } from '../components/Icons';
 import { ResultOverlay } from '../components/ResultOverlay';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SettingsButton } from '../components/SettingsButton';
@@ -21,14 +21,26 @@ export interface WinResult {
   stars: number;
   moves: Move[];
   durationMs: number;
+  mistakes: number;
+  hintsUsed: number;
+  undosUsed: number;
+  bestStreak: number;
+  size: number;
+}
+
+/** What the result card can show after a win. */
+export interface WinReport {
+  note?: string | null;
+  unlocked?: { id: string; title: string }[];
+  shareText?: string | null;
 }
 
 interface Props {
   level: Level;
   title: string;
   wonTitle?: string;
-  /** Saves the win; may resolve to a short note for the result card (e.g. rank). */
-  onWin: (result: WinResult) => Promise<string | null> | void;
+  /** Saves the win; may resolve to extras for the result card (rank, achievements, share). */
+  onWin: (result: WinResult) => Promise<WinReport> | WinReport | void;
   primary?: { label: string; onPress: () => void; testID: string };
   onHome: () => void;
 }
@@ -36,7 +48,7 @@ interface Props {
 export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: Props) {
   const styles = useStyles(makeStyles);
   const [state, dispatch] = useReducer(gameReducer, level, initGame);
-  const [note, setNote] = useState<string | null>(null);
+  const [report, setReport] = useState<WinReport>({});
   // Play time counts only while the app is in the foreground (monotonic clock).
   const clock = useRef({ total: 0, since: monotonicNow() as number | null });
 
@@ -65,7 +77,7 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
   useEffect(() => {
     if (state.moves.length === 0) {
       clock.current = { total: 0, since: monotonicNow() };
-      setNote(null);
+      setReport({});
     }
   }, [state.moves.length]);
 
@@ -79,9 +91,19 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
     const played = c.total + (c.since === null ? 0 : monotonicNow() - c.since);
     const taps = state.moves.filter(m => m.type === 'tap').length;
     Promise.resolve(
-      onWin({ score: state.score, stars, moves: state.moves, durationMs: clampDuration(played, taps) }),
+      onWin({
+        score: state.score,
+        stars,
+        moves: state.moves,
+        durationMs: clampDuration(played, taps),
+        mistakes: state.mistakes,
+        hintsUsed: usedHints(state),
+        undosUsed: usedUndos(state),
+        bestStreak: state.bestStreak,
+        size: level.size,
+      }),
     )
-      .then(n => alive && n && setNote(n))
+      .then(r => alive && r && setReport(r))
       .catch(e => console.warn('saving the win failed', e));
     return () => {
       alive = false;
@@ -135,6 +157,14 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
           onPress={() => dispatch({ type: 'hint' })}>
           <Bulb size={26} />
         </RoundButton>
+        <RoundButton
+          testID="undo-button"
+          label={`Undo last mistake, ${state.undosLeft} left`}
+          badge={state.undosLeft}
+          disabled={!canUndo(state)}
+          onPress={() => dispatch({ type: 'undo' })}>
+          <Undo size={26} />
+        </RoundButton>
         <RoundButton testID="restart-button" label="Restart level" onPress={() => dispatch({ type: 'restart' })}>
           <Restart size={26} />
         </RoundButton>
@@ -146,7 +176,10 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
           wonTitle={wonTitle}
           stars={stars}
           score={state.score}
-          note={note}
+          note={report.note}
+          unlocked={report.unlocked}
+          shareText={report.shareText}
+          onUndo={canUndo(state) ? () => dispatch({ type: 'undo' }) : undefined}
           primary={primary}
           onRetry={() => dispatch({ type: 'restart' })}
           onHome={onHome}
@@ -212,7 +245,7 @@ const makeStyles = (c: Palette) =>
     hearts: { flexDirection: 'row', gap: 4 },
     muted: { color: c.muted, ...type.footnote, textAlign: 'center', marginTop: 10 },
     boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    footer: { flexDirection: 'row', justifyContent: 'center', gap: 28, paddingVertical: 16 },
+    footer: { flexDirection: 'row', justifyContent: 'center', gap: 24, paddingVertical: 16 },
     round: {
       width: 60,
       height: 60,
