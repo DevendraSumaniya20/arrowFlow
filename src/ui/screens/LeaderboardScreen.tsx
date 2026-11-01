@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -16,6 +16,7 @@ import { Button } from '../components/Button';
 import { Stars } from '../components/Icons';
 import { ScoreArrow } from '../components/ScoreArrow';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { useToday } from '../hooks/useToday';
 import { Palette, usePalette, useStyles } from '../theme';
 
 export type LeaderboardTab = 'today' | 'all';
@@ -44,14 +45,22 @@ export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }:
   const [tab, setTab] = useState<LeaderboardTab>(initialTab);
   const [load, setLoad] = useState<Load>({ state: 'loading' });
   const [refreshing, setRefreshing] = useState(false);
-  const today = utcDate();
+  const { today, now } = useToday();
   const token = player?.token;
+  const latest = useRef(0);
 
   const fetchBoard = useCallback(async () => {
+    // Only the newest request may update the screen (tabs can switch mid-flight).
+    const id = ++latest.current;
     try {
       const board = tab === 'today' ? await api.dailyBoard(today, token) : await api.globalBoard(token);
-      setLoad({ state: 'ready', board });
+      if (id === latest.current) {
+        setLoad({ state: 'ready', board });
+      }
     } catch (e) {
+      if (id !== latest.current) {
+        return;
+      }
       setLoad({
         state: 'error',
         message:
@@ -84,7 +93,7 @@ export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }:
       <Segmented value={tab} onChange={setTab} />
       <Text style={styles.caption}>
         {tab === 'today'
-          ? `Today's daily challenge · resets in ${timeLeft(new Date())}`
+          ? `Today's daily challenge · resets in ${timeLeft(now)}`
           : 'Best score on every campaign level, added up'}
       </Text>
 
@@ -171,7 +180,7 @@ function Segmented({ value, onChange }: { value: LeaderboardTab; onChange: (t: L
 function Row({ entry, top, mine, tab }: { entry: Entry; top: number; mine: boolean; tab: LeaderboardTab }) {
   const styles = useStyles(makeStyles);
   const c = usePalette();
-  const detail = tab === 'all' ? `${entry.levels} levels` : null;
+  const detail = tab === 'all' && entry.levels !== undefined ? `${entry.levels} levels` : null;
   return (
     <View
       style={[styles.row, mine && styles.rowMine]}
@@ -205,7 +214,7 @@ function Row({ entry, top, mine, tab }: { entry: Entry; top: number; mine: boole
 function Identity() {
   const styles = useStyles(makeStyles);
   const c = usePalette();
-  const { player, register, rename } = usePlayer();
+  const { player, expired, register, rename } = usePlayer();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -258,7 +267,9 @@ function Identity() {
       <Text style={styles.joinTitle}>{player ? 'Change your name' : 'Join the leaderboard'}</Text>
       {!player && (
         <Text style={styles.message}>
-          Pick a name to rank your daily runs. No account needed; wins from this phone count.
+          {expired
+            ? 'Your leaderboard name is no longer recognised. Join again; your waiting results will be posted.'
+            : 'Pick a name to rank your daily runs. No account needed; wins from this phone count.'}
         </Text>
       )}
       <View style={styles.joinRow}>

@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { utcDate } from '../../domain/daily';
 import { generateLevel } from '../../domain/generator';
 import { dailyStreak, totalScore, totalStars } from '../../domain/progress';
 import { useProgress } from '../../state/ProgressContext';
@@ -10,6 +9,7 @@ import { DailyCard } from '../components/DailyCard';
 import { Grid, Podium } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { SettingsButton } from '../components/SettingsButton';
+import { useToday } from '../hooks/useToday';
 import { Palette, useStyles } from '../theme';
 
 interface Props {
@@ -22,7 +22,7 @@ interface Props {
 export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard }: Props) {
   const styles = useStyles(makeStyles);
   const { progress } = useProgress();
-  const today = utcDate();
+  const { today } = useToday();
   const level = progress.unlocked;
   const next = useMemo(() => generateLevel(level), [level]);
   const { width, height } = useWindowDimensions();

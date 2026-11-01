@@ -53,6 +53,7 @@ export interface PendingResult {
   key: string; // date or level number
   moves: Move[];
   durationMs: number;
+  score: number; // client-side score, only used to keep the best pending run
 }
 const parseOutbox = (raw: string | null): PendingResult[] => {
   try {

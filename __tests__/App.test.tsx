@@ -108,3 +108,70 @@ test('leaderboard: join with a nickname, then see your row', async () => {
     token: 't0k3n',
   });
 });
+
+// Review finding: a slow Today response could overwrite the All time tab.
+test('leaderboard ignores a late response from the previous tab', async () => {
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  await AsyncStorage.clear();
+  const pending: Record<string, (body: unknown) => void> = {};
+  globalThis.fetch = jest.fn(
+    (url: string) =>
+      new Promise(resolve => {
+        const key = url.includes('/v1/daily/') ? 'daily' : url.includes('/v1/leaderboard') ? 'global' : 'other';
+        pending[key] = body => resolve({ ok: true, status: 200, json: () => Promise.resolve(body) } as Response);
+        if (key === 'other') {
+          pending.other({});
+        }
+      }),
+  ) as unknown as typeof fetch;
+
+  let root!: ReactTestRenderer.ReactTestRenderer;
+  await ReactTestRenderer.act(() => {
+    root = ReactTestRenderer.create(<App />);
+  });
+  const byId = (id: string) => root.root.findAll(n => n.props.testID === id);
+  const texts = () =>
+    root.root
+      .findAll(n => n.props.children !== undefined)
+      .flatMap(n => [n.props.children].flat())
+      .filter((t): t is string => typeof t === 'string');
+  for (let i = 0; i < 20 && byId('leaderboard-button').length === 0; i++) {
+    await flush();
+  }
+
+  await ReactTestRenderer.act(() => byId('leaderboard-button')[0].props.onPress()); // Today in flight
+  await flush();
+  await ReactTestRenderer.act(() => byId('tab-all')[0].props.onPress()); // All time in flight
+  await flush();
+  const entry = (nickname: string, extra: object) => ({ rank: 1, playerId: nickname, nickname, score: 10, stars: 3, ...extra });
+  await ReactTestRenderer.act(async () => pending.global({ entries: [entry('Globe', { levels: 4 })], me: null }));
+  await flush();
+  await ReactTestRenderer.act(async () => pending.daily({ entries: [entry('Daily', {})], me: null })); // late
+  await flush();
+
+  expect(texts()).toContain('Globe');
+  expect(texts()).not.toContain('Daily');
+  expect(texts()).toContain('4 levels');
+});
+
+// Review finding: a dead token silently dropped every queued result.
+test('a token the server no longer knows asks to join again and keeps results', async () => {
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  await AsyncStorage.clear();
+  const queued = { kind: 'daily', key: '2026-11-01', moves: [], durationMs: 1000, score: 10 };
+  await AsyncStorage.setItem('arrowswap/player/v1', JSON.stringify({ id: 'p', nickname: 'Old', token: 'dead' }));
+  await AsyncStorage.setItem('arrowswap/outbox/v1', JSON.stringify([queued]));
+  globalThis.fetch = jest.fn(() =>
+    Promise.resolve({ ok: false, status: 401, json: () => Promise.resolve({ error: 'unauthorized' }) } as Response),
+  ) as unknown as typeof fetch;
+
+  await ReactTestRenderer.act(() => {
+    ReactTestRenderer.create(<App />);
+  });
+  for (let i = 0; i < 10; i++) {
+    await flush();
+  }
+
+  expect(await AsyncStorage.getItem('arrowswap/player/v1')).toBeNull();
+  expect(JSON.parse(await AsyncStorage.getItem('arrowswap/outbox/v1'))).toEqual([queued]);
+});

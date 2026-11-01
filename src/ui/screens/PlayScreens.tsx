@@ -3,6 +3,7 @@ import { generateDailyLevel } from '../../domain/daily';
 import { generateLevel } from '../../domain/generator';
 import { usePlayer } from '../../state/PlayerContext';
 import { useProgress } from '../../state/ProgressContext';
+import { dailyNote } from '../dailyNote';
 import { GameScreen, WinResult } from './GameScreen';
 
 export function CampaignGame({
@@ -21,7 +22,7 @@ export function CampaignGame({
   const onWin = (r: WinResult) => {
     recordWin(levelNumber, r.stars, r.score);
     // Counts toward the all-time board; queued when offline or not joined yet.
-    submit({ kind: 'level', key: String(levelNumber), moves: r.moves, durationMs: r.durationMs });
+    submit({ kind: 'level', key: String(levelNumber), moves: r.moves, durationMs: r.durationMs, score: r.score });
   };
 
   return (
@@ -46,17 +47,13 @@ export function DailyGame({
 }) {
   const level = useMemo(() => generateDailyLevel(date), [date]);
   const { recordDailyWin } = useProgress();
-  const { player, submit } = usePlayer();
+  const { submit } = usePlayer();
 
   const onWin = async (r: WinResult) => {
     recordDailyWin(date, r.stars, r.score);
-    const res = await submit({ kind: 'daily', key: date, moves: r.moves, durationMs: r.durationMs });
-    if (res?.rank) {
-      return `You're #${res.rank} today`;
-    }
-    return player
-      ? "Saved. It'll reach the leaderboard when you're back online."
-      : 'Join the leaderboard to see your rank.';
+    return dailyNote(
+      await submit({ kind: 'daily', key: date, moves: r.moves, durationMs: r.durationMs, score: r.score }),
+    );
   };
 
   return (

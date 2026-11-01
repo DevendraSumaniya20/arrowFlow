@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { difficultyOf } from '../../domain/generator';
-import { MAX_LIVES, starsFor } from '../../domain/scoring';
+import { clampDuration, MAX_LIVES, starsFor } from '../../domain/scoring';
 import { Level } from '../../domain/types';
 import { gameReducer, initGame, Move } from '../../state/gameReducer';
 import { Board } from '../components/Board';
@@ -11,6 +11,10 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { SettingsButton } from '../components/SettingsButton';
 import { useGameFeedback } from '../hooks/useGameFeedback';
 import { Palette, useStyles } from '../theme';
+
+// RN provides performance.now() at runtime but its TS types omit it.
+const monotonicNow = (): number =>
+  (globalThis as { performance?: { now(): number } }).performance?.now() ?? Date.now();
 
 export interface WinResult {
   score: number;
@@ -33,7 +37,8 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
   const styles = useStyles(makeStyles);
   const [state, dispatch] = useReducer(gameReducer, level, initGame);
   const [note, setNote] = useState<string | null>(null);
-  const startedAt = useRef(Date.now());
+  // Play time counts only while the app is in the foreground (monotonic clock).
+  const clock = useRef({ total: 0, since: monotonicNow() as number | null });
 
   const onTap = useCallback(
     (row: number, col: number) => dispatch({ type: 'tap', row, col }),
@@ -43,10 +48,23 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
 
   useGameFeedback(state);
 
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', s => {
+      const c = clock.current;
+      if (s === 'active' && c.since === null) {
+        c.since = monotonicNow();
+      } else if (s !== 'active' && c.since !== null) {
+        c.total += monotonicNow() - c.since;
+        c.since = null;
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   // A fresh or restarted board restarts the clock.
   useEffect(() => {
     if (state.moves.length === 0) {
-      startedAt.current = Date.now();
+      clock.current = { total: 0, since: monotonicNow() };
       setNote(null);
     }
   }, [state.moves.length]);
@@ -57,9 +75,14 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
       return;
     }
     let alive = true;
+    const c = clock.current;
+    const played = c.total + (c.since === null ? 0 : monotonicNow() - c.since);
+    const taps = state.moves.filter(m => m.type === 'tap').length;
     Promise.resolve(
-      onWin({ score: state.score, stars, moves: state.moves, durationMs: Date.now() - startedAt.current }),
-    ).then(n => alive && n && setNote(n));
+      onWin({ score: state.score, stars, moves: state.moves, durationMs: clampDuration(played, taps) }),
+    )
+      .then(n => alive && n && setNote(n))
+      .catch(e => console.warn('saving the win failed', e));
     return () => {
       alive = false;
     };

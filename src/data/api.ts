@@ -85,9 +85,9 @@ export const api = {
       body: JSON.stringify({ nickname }),
       token,
     }),
-  daily: () => request<{ date: string; difficulty: number; endsAt: string }>('/v1/daily'),
+  daily: () => request<{ date: string; difficulty: number; endsAt: string; now: string }>('/v1/daily'),
   submitDaily: (token: string, date: string, moves: Move[], durationMs: number) =>
-    request<Verified & { rank: number | null }>(
+    request<Verified & { rank?: number | null }>(
       `/v1/daily/${date}/results`,
       post({ moves, durationMs }, token),
     ),
