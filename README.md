@@ -13,6 +13,11 @@ board like a snake, otherwise it bumps and you lose a heart. Clear the board.
 - Leaderboards (Today / All time) with anonymous nicknames; results are
   verified by the server, which replays the moves on the same seeded board
 - Appearance: System, Light or Dark (Apple design language on both platforms)
+- Undo the last mistake (once per level, costs points; verified by the server)
+- 12 achievements with a trophy screen
+- Share daily results (spoiler-free text via the system share sheet)
+- Optional daily reminder (local notifications via Notifee), skipped on days
+  the daily is already cleared
 
 ## Run
 
@@ -21,6 +26,7 @@ npm install
 cd ios && bundle install && bundle exec pod install && cd ..
 npm start            # Metro
 npm run android      # emulator / device
+npm run android:reverse  # Metro + API over adb (needed on Android 17+ emulators)
 npm run ios          # simulator
 ```
 
@@ -39,8 +45,9 @@ npm run dev                 # http://localhost:3000
 npm test                    # integration tests (needs a database named arrowflow_test)
 ```
 
-The app calls `http://10.0.2.2:3000` (Android emulator) or `http://localhost:3000`
-(iOS simulator) in debug builds. Set the production URL in `src/config.ts`.
+Debug builds call `http://localhost:3000`: the iOS simulator shares the host
+network and Android reaches it through `npm run android:reverse` (adb reverse).
+Using loopback avoids Android 17's local-network permission prompt. Set the production URL in `src/config.ts`.
 With Docker: `docker compose -f server/docker-compose.yml up --build`.
 
 | Method | Path | Auth | Purpose |
@@ -76,6 +83,7 @@ src/
     progress.ts    saved-progress model, merge + validation
     settings.ts    settings model + validation
     daily.ts       daily challenge seed and difficulty
+    achievements.ts, reminder.ts (plan), share.ts
 server/     Fastify API, Prisma schema + migrations, integration tests
   data/     storage.ts (AsyncStorage), api.ts (typed backend client)
   state/    gameReducer.ts (per-level game rules as actions), feedback.ts
@@ -83,7 +91,8 @@ server/     Fastify API, Prisma schema + migrations, integration tests
   store/    Redux Toolkit: settings, progress and player slices, async thunks
             for the backend, AsyncStorage persistence via listener middleware,
             hooks.ts (useSettings / useProgress / usePlayer facades)
-  services/ sound.ts (synthesized effects), results.ts (offline outbox)
+  services/ sound.ts (synthesized effects), results.ts (offline outbox),
+            reminder.ts (Notifee), clock.ts (server time)
   ui/       screens/ (Home, LevelSelect, Game, Settings), components/, hooks/
 ```
 
@@ -98,3 +107,10 @@ Placement prefers spots that block the newest arrows' lanes, which builds long
 dependency chains. Several candidate boards are built per level and the one with
 the deepest solve chain and fewest free opening moves wins. Boards grow from 6x6
 to 16x16.
+
+## Notes
+
+- React Native CLI only: no Expo packages.
+- `react-native-audio-api` is built without FFmpeg (`DISABLE_AUDIOAPI_FFMPEG`
+  in `ios/Podfile`, `disableAudioapiFFmpeg` in `android/gradle.properties`):
+  every sound is synthesized, so file decoding is not needed.
