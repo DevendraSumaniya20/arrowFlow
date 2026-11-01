@@ -61,6 +61,7 @@ describe('daily challenge', () => {
       date: TODAY,
       difficulty: 34, // 2026-11-01 is a Sunday
       endsAt: '2026-11-02T00:00:00.000Z',
+      now: '2026-11-01T12:00:00.000Z',
     });
   });
 
@@ -88,14 +89,15 @@ describe('daily challenge', () => {
         method: 'POST',
         url: `/v1/daily/${TODAY}/results`,
         headers: p.auth,
-        payload: { moves: bad, durationMs: 1000 },
+        payload: { moves: bad, durationMs: 60_000 },
       });
       expect(res.statusCode).toBe(422);
+      expect(res.json().error).toBe('not_solved');
     }
     const noAuth = await app.inject({
       method: 'POST',
       url: `/v1/daily/${TODAY}/results`,
-      payload: { moves, durationMs: 1000 },
+      payload: { moves, durationMs: 60_000 },
     });
     expect(noAuth.statusCode).toBe(401);
   });
@@ -109,7 +111,7 @@ describe('daily challenge', () => {
       method: 'POST',
       url: `/v1/daily/${yesterday}/results`,
       headers: p.auth,
-      payload: { moves, durationMs: 1000 },
+      payload: { moves, durationMs: 60_000 },
     });
     expect(ok.statusCode).toBe(200);
 
@@ -118,7 +120,7 @@ describe('daily challenge', () => {
       method: 'POST',
       url: `/v1/daily/${yesterday}/results`,
       headers: p.auth,
-      payload: { moves, durationMs: 1000 },
+      payload: { moves, durationMs: 60_000 },
     });
     expect(res.statusCode).toBe(409);
     expect((await tooLate.inject(`/v1/daily/2026-02-30/leaderboard`)).statusCode).toBe(400);
@@ -140,7 +142,7 @@ describe('daily challenge', () => {
 
     await submit(bob, sloppy, 10_000);
     await submit(alice, clean, 30_000);
-    await submit(alice, sloppy, 5_000); // worse score: must not replace the best
+    await submit(alice, sloppy, 8_000); // worse score: must not replace the best
 
     const board = (
       await app.inject({ url: `/v1/daily/${TODAY}/leaderboard`, headers: bob.auth })
@@ -157,6 +159,66 @@ describe('daily challenge', () => {
   });
 });
 
+describe('regressions', () => {
+  // Review finding: durationMs is client-reported and broke ties, so 0 won every day.
+  it('rejects impossibly fast times', async () => {
+    const app = await makeApp();
+    const p = await register(app, 'Speedy');
+    const moves = solve(generateDailyLevel(TODAY));
+    for (const durationMs of [0, moves.length * 100]) {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/v1/daily/${TODAY}/results`,
+        headers: p.auth,
+        payload: { moves, durationMs },
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().error).toBe('implausible_time');
+    }
+  });
+
+  it('breaks exact score and time ties by who got there first', async () => {
+    const app = await makeApp();
+    const first = await register(app, 'First');
+    const second = await register(app, 'Second');
+    const moves = solve(generateDailyLevel(TODAY));
+    for (const p of [first, second]) {
+      await app.inject({
+        method: 'POST',
+        url: `/v1/daily/${TODAY}/results`,
+        headers: p.auth,
+        payload: { moves, durationMs: 60_000 },
+      });
+    }
+    const board = (await app.inject(`/v1/daily/${TODAY}/leaderboard`)).json();
+    expect(board.entries.map((e: { nickname: string; rank: number }) => [e.nickname, e.rank])).toEqual([
+      ['First', 1],
+      ['Second', 2],
+    ]);
+  });
+
+  // Review finding: the all-time board loaded every player into memory to slice it.
+  it('limits the all-time board in SQL and still ranks me outside the top', async () => {
+    const app = await makeApp();
+    const alice = await register(app, 'Alice');
+    const bob = await register(app, 'Bob');
+    for (const [p, levels] of [[alice, [1, 2]], [bob, [1]]] as const) {
+      for (const n of levels) {
+        await app.inject({
+          method: 'POST',
+          url: `/v1/levels/${n}/results`,
+          headers: p.auth,
+          payload: { moves: solve(generateLevel(n)), durationMs: 60_000 },
+        });
+      }
+    }
+    const res = (await app.inject({ url: '/v1/leaderboard?limit=1', headers: bob.auth })).json();
+    expect(res.entries).toHaveLength(1);
+    expect(res.entries[0].nickname).toBe('Alice');
+    expect(res.me).toMatchObject({ nickname: 'Bob', rank: 2, levels: 1 });
+  });
+});
+
 describe('campaign levels and all-time leaderboard', () => {
   it('verifies level runs and sums best scores per player', async () => {
     const app = await makeApp();
@@ -167,7 +229,7 @@ describe('campaign levels and all-time leaderboard', () => {
         method: 'POST',
         url: `/v1/levels/${n}/results`,
         headers: p.auth,
-        payload: { moves: solve(generateLevel(n)), durationMs: 1000 },
+        payload: { moves: solve(generateLevel(n)), durationMs: 60_000 },
       });
 
     expect((await play(alice, 1)).statusCode).toBe(200);
@@ -186,7 +248,7 @@ describe('campaign levels and all-time leaderboard', () => {
       method: 'POST',
       url: '/v1/levels/3/results',
       headers: alice.auth,
-      payload: { moves: solve(generateLevel(1)), durationMs: 1000 },
+      payload: { moves: solve(generateLevel(1)), durationMs: 60_000 },
     });
     expect(wrongLevel.statusCode).toBe(422);
   });

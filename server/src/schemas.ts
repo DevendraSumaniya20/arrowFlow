@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MAX_DURATION_MS } from './engine';
 
 export const Nickname = z
   .string()
@@ -21,7 +22,7 @@ export const Moves = z
 
 export const ResultBody = z.object({
   moves: Moves,
-  durationMs: z.number().int().min(0).max(24 * 60 * 60 * 1000),
+  durationMs: z.number().int().min(0).max(MAX_DURATION_MS - 1),
 });
 
 export const Limit = z.object({
