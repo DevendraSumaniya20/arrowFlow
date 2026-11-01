@@ -1,6 +1,7 @@
 # arrowFlow
 
-**ArrowSwap**: an arrow-escape puzzle for Android and iOS (React Native 0.88, TypeScript).
+**Arrow Flow**: an arrow-escape puzzle for Android and iOS (React Native 0.88, TypeScript),
+with a Node backend for the daily challenge and leaderboards.
 Tap a bent arrow: if the lane in front of its head is clear it slides off the
 board like a snake, otherwise it bumps and you lose a heart. Clear the board.
 
@@ -8,6 +9,10 @@ board like a snake, otherwise it bumps and you lose a heart. Clear the board.
 - 3 hearts, 2 free hints per level, combo scoring, 1-3 stars
 - Synthesized sound effects and haptics, both switchable in Settings
 - Progress and settings saved on the phone (AsyncStorage)
+- Daily challenge: one seeded board per UTC day, harder Monday to Sunday
+- Leaderboards (Today / All time) with anonymous nicknames; results are
+  verified by the server, which replays the moves on the same seeded board
+- Light and dark appearance
 
 ## Run
 
@@ -19,11 +24,43 @@ npm run android      # emulator / device
 npm run ios          # simulator
 ```
 
+## Backend (`server/`)
+
+Fastify 5 + Prisma 7 + PostgreSQL. It imports the app's game engine
+(`src/domain`, `src/state/gameReducer.ts`), so the server rebuilds any board
+and replays a player's moves exactly like the phone: clients never send a score.
+
+```sh
+cd server
+npm install
+cp .env.example .env        # set DATABASE_URL
+npx prisma migrate dev      # create tables
+npm run dev                 # http://localhost:3000
+npm test                    # integration tests (needs a database named arrowflow_test)
+```
+
+The app calls `http://10.0.2.2:3000` (Android emulator) or `http://localhost:3000`
+(iOS simulator) in debug builds. Set the production URL in `src/config.ts`.
+With Docker: `docker compose -f server/docker-compose.yml up --build`.
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/v1/players` | - | Register a nickname, returns the player token once |
+| GET/PATCH | `/v1/players/me` | Bearer | Read or rename the player |
+| GET | `/v1/daily` | - | Today's date (UTC), difficulty, end time |
+| POST | `/v1/daily/:date/results` | Bearer | Submit moves; server verifies, keeps best, returns rank |
+| GET | `/v1/daily/:date/leaderboard` | optional | Top 50 + your own rank |
+| POST | `/v1/levels/:level/results` | Bearer | Submit a verified campaign level run |
+| GET | `/v1/leaderboard` | optional | All-time: sum of best level scores |
+| GET | `/health` | - | Liveness + database check |
+
+Wins made offline (or before joining) wait in an on-device outbox and are sent later.
+
 ## Test
 
 ```sh
 npm test             # Jest: rules, generator, reducer, progress, app render
-npm run e2e:android  # Maestro flows in .maestro/ (app installed + Metro running)
+npm run e2e:android  # Maestro flows in .maestro/ (app installed, Metro and API running)
 npm run e2e:ios      # add --device <udid> if several devices are connected
 ```
 
@@ -38,10 +75,12 @@ src/
     scoring.ts     lives, hints, combo points, stars
     progress.ts    saved-progress model, merge + validation
     settings.ts    settings model + validation
-  data/     storage.ts: AsyncStorage persistence for progress and settings
+    daily.ts       daily challenge seed and difficulty
+server/     Fastify API, Prisma schema + migrations, integration tests
+  data/     storage.ts (AsyncStorage), api.ts (typed backend client)
   state/    gameReducer.ts (all game rules as actions), feedback.ts (which
             sound/haptic each transition causes), Progress/Settings contexts
-  services/ sound.ts: effects synthesized with react-native-audio-api
+  services/ sound.ts (synthesized effects), results.ts (offline outbox)
   ui/       screens/ (Home, LevelSelect, Game, Settings), components/, hooks/
 ```
 
