@@ -8,7 +8,7 @@ name: Home and level select
     visible:
       id: "play-button"
     timeout: 60000
-- assertVisible: "ArrowSwap"
+- assertVisible: "Arrow Flow"
 - assertVisible:
     id: "play-button"
 - assertVisible: "Play level 1"

@@ -1,0 +1,49 @@
+# Needs the API running locally (cd server && npm run dev).
+# Joins the leaderboard, clears today's daily challenge, and finds the
+# verified result ranked on the Today board.
+appId: ${APP_ID}
+name: Daily challenge and leaderboard
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- tapOn:
+    id: "leaderboard-button"
+- assertVisible: "Join the leaderboard"
+- tapOn:
+    id: "nickname-input"
+- inputText: "Tester"
+- inputRandomNumber:
+    length: 4
+# Return submits the form (works on both keyboards, unlike hideKeyboard on iOS).
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "Playing as.*"
+    timeout: 15000
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "daily-button"
+- extendedWaitUntil:
+    visible: "3 of 3 lives"
+    timeout: 15000
+- assertVisible: "Daily challenge"
+- repeat:
+    times: 200
+    while:
+      notVisible: "Daily cleared!"
+    commands:
+      - tapOn:
+          id: "arrow-free"
+          index: 0
+- assertVisible: "Daily cleared!"
+- extendedWaitUntil:
+    visible: "You're #[0-9]+ today"
+    timeout: 15000
+- tapOn:
+    id: "leaderboard-cta"
+- assertVisible: "Today's daily challenge.*"
+- assertVisible: ".*You"
