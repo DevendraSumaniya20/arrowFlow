@@ -1,0 +1,64 @@
+# Settings survive a restart, opening them mid-game keeps the game,
+# and reset progress asks before clearing.
+appId: ${APP_ID}
+name: Settings persist and reset progress
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- tapOn:
+    id: "settings-button"
+- assertVisible: "Settings"
+- assertVisible:
+    id: "sound-switch"
+    checked: true
+- tapOn:
+    id: "sound-switch"
+- tapOn:
+    id: "vibration-switch"
+- assertVisible:
+    id: "sound-switch"
+    checked: false
+- tapOn:
+    id: "settings-close"
+- stopApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- tapOn:
+    id: "play-button"
+- tapOn:
+    id: "arrow-blocked"
+    index: 0
+- assertVisible: "2 of 3 lives"
+- tapOn:
+    id: "settings-button"
+- assertVisible:
+    id: "sound-switch"
+    checked: false
+- assertVisible:
+    id: "vibration-switch"
+    checked: false
+- tapOn:
+    id: "settings-close"
+- assertVisible: "2 of 3 lives"
+- tapOn:
+    id: "back-button"
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "reset-button"
+- assertVisible: "Reset progress?"
+- tapOn: "(?i)cancel"
+- tapOn:
+    id: "reset-button"
+- tapOn: "(?i)reset"
+- tapOn:
+    id: "settings-close"
+- assertVisible: "Play level 1"

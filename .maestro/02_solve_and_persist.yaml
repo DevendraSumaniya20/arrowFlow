@@ -1,0 +1,44 @@
+# Clears level 1 by always tapping a free arrow, then checks progress
+# survives an app restart (AsyncStorage).
+appId: ${APP_ID}
+name: Solve level 1 and keep progress
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- tapOn:
+    id: "play-button"
+- assertVisible: "Level 1"
+- extendedWaitUntil:
+    visible: "3 of 3 lives"
+    timeout: 15000
+- tapOn:
+    id: "hint-button"
+- assertVisible: "Hint, 1 left"
+- repeat:
+    times: 60
+    while:
+      notVisible: "Level clear!"
+    commands:
+      - tapOn:
+          id: "arrow-free"
+          index: 0
+- assertVisible: "Level clear!"
+- assertVisible: "3 of 3 stars"
+- tapOn:
+    id: "next-button"
+- assertVisible: "Level 2"
+- tapOn:
+    id: "back-button"
+- assertVisible: "Play level 2"
+- stopApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- assertVisible: "Play level 2"

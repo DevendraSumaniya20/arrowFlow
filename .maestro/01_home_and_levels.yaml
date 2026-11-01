@@ -1,0 +1,26 @@
+# Home screen and level picker work on a fresh install.
+appId: ${APP_ID}
+name: Home and level select
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- assertVisible: "ArrowSwap"
+- assertVisible:
+    id: "play-button"
+- assertVisible: "Play level 1"
+- tapOn:
+    id: "levels-button"
+- assertVisible: "Levels"
+- assertVisible: "Level 1, 0 stars"
+- assertVisible: "Level 2, locked"
+- tapOn: "Level 1, 0 stars"
+- assertVisible: "Level 1"
+- assertVisible:
+    id: "board"
+- tapOn:
+    id: "back-button"
+- assertVisible: "Play level 1"

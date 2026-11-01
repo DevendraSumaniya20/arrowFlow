@@ -1,0 +1,32 @@
+# Tapping a blocked arrow costs a life; three misses ends the run.
+appId: ${APP_ID}
+name: Lose all lives and retry
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "play-button"
+    timeout: 60000
+- tapOn:
+    id: "play-button"
+- extendedWaitUntil:
+    visible: "3 of 3 lives"
+    timeout: 15000
+- tapOn:
+    id: "arrow-blocked"
+    index: 0
+- assertVisible: "2 of 3 lives"
+- tapOn:
+    id: "arrow-blocked"
+    index: 0
+- tapOn:
+    id: "arrow-blocked"
+    index: 0
+- assertVisible: "Out of lives"
+- tapOn:
+    id: "retry-button"
+- assertVisible: "3 of 3 lives"
+- tapOn:
+    id: "restart-button"
+- assertVisible: "Hint, 2 left"
