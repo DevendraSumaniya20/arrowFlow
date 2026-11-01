@@ -36,9 +36,11 @@ name: Daily challenge and leaderboard
     while:
       notVisible: "Daily cleared!"
     commands:
+      # Optional: after the last tap the board is empty while the arrow flies off.
       - tapOn:
           id: "arrow-free"
           index: 0
+          optional: true
 - assertVisible: "Daily cleared!"
 - extendedWaitUntil:
     visible: "You're #[0-9]+ today"
@@ -46,4 +48,10 @@ name: Daily challenge and leaderboard
 - tapOn:
     id: "leaderboard-cta"
 - assertVisible: "Today's daily challenge.*"
-- assertVisible: ".*You"
+# Earlier runs leave tied players on a local database, so scroll to our row.
+- scrollUntilVisible:
+    element:
+      id: "my-rank-row"
+    direction: DOWN
+    timeout: 20000
+    visibilityPercentage: 50

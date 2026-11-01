@@ -23,9 +23,11 @@ name: Solve level 1 and keep progress
     while:
       notVisible: "Level clear!"
     commands:
+      # Optional: after the last tap the board is empty while the arrow flies off.
       - tapOn:
           id: "arrow-free"
           index: 0
+          optional: true
 - assertVisible: "Level clear!"
 - assertVisible: "3 of 3 stars"
 - tapOn:

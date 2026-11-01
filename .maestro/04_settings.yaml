@@ -19,6 +19,8 @@ name: Settings persist and reset progress
     id: "sound-switch"
 - tapOn:
     id: "vibration-switch"
+- tapOn:
+    id: "appearance-dark"
 - assertVisible:
     id: "sound-switch"
     checked: false
@@ -45,6 +47,9 @@ name: Settings persist and reset progress
 - assertVisible:
     id: "vibration-switch"
     checked: false
+- assertVisible:
+    id: "appearance-dark"
+    selected: true
 - tapOn:
     id: "settings-close"
 - assertVisible: "2 of 3 lives"
