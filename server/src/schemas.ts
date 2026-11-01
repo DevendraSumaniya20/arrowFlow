@@ -15,6 +15,7 @@ export const Moves = z
     z.discriminatedUnion('type', [
       z.object({ type: z.literal('tap'), row: Coord, col: Coord }),
       z.object({ type: z.literal('hint') }),
+      z.object({ type: z.literal('undo') }),
     ]),
   )
   .min(1)

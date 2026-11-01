@@ -1,5 +1,8 @@
 export const MAX_LIVES = 3;
 export const HINTS_PER_LEVEL = 2;
+export const UNDOS_PER_LEVEL = 1;
+/** Undo gives the heart back but costs points, so a clean run still scores best. */
+export const UNDO_COST = 20;
 
 /** Clean taps in a row earn more: 10, 15, 20, 25, 30 max. */
 export const pointsForTap = (streak: number) => 10 + 5 * Math.min(streak - 1, 4);

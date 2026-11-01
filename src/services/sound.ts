@@ -57,6 +57,9 @@ export function playSound(name: Feedback, streak = 1) {
       case 'bump':
         tone(c, { freq: 160, to: 70, dur: 0.14, vol: 0.3, type: 'triangle' });
         break;
+      case 'undo': // a soft rewind: falling glide
+        tone(c, { freq: 700, to: 350, dur: 0.22, vol: 0.14 });
+        break;
       case 'hint':
         tone(c, { freq: 880, dur: 0.12, vol: 0.12 });
         tone(c, { freq: 1320, at: 0.1, dur: 0.18, vol: 0.12 });

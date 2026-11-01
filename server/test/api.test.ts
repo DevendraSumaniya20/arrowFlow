@@ -219,6 +219,24 @@ describe('regressions', () => {
   });
 });
 
+describe('undo', () => {
+  it('verifies a run that undid a mistake, scoring it on the server', async () => {
+    const app = await makeApp();
+    const p = await register(app, 'Undoer');
+    const level = generateDailyLevel(TODAY);
+    const moves = [blockedTap(level), { type: 'undo' as const }, ...solve(level)];
+    const res = await app.inject({
+      method: 'POST',
+      url: `/v1/daily/${TODAY}/results`,
+      headers: p.auth,
+      payload: { moves, durationMs: 60_000 },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ ...verify(level, moves), stars: 3 });
+    expect(res.json().score).toBeLessThan(verify(level, solve(level))!.score); // undo costs points
+  });
+});
+
 describe('campaign levels and all-time leaderboard', () => {
   it('verifies level runs and sums best scores per player', async () => {
     const app = await makeApp();
