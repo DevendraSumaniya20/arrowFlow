@@ -1,0 +1,10 @@
+# Only the server and the shared engine go into the image.
+*
+!server
+!src/domain
+!src/state/gameReducer.ts
+server/node_modules
+server/dist
+server/generated
+server/.env
+**/__tests__

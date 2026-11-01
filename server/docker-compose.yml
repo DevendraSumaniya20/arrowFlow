@@ -1,0 +1,27 @@
+# Local stack: Postgres + API.  docker compose -f server/docker-compose.yml up --build
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: arrowflow
+      POSTGRES_PASSWORD: arrowflow
+      POSTGRES_DB: arrowflow
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "arrowflow"]
+      interval: 2s
+      retries: 20
+  api:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://arrowflow:arrowflow@db:5432/arrowflow
+      PORT: 3000
+    ports: ["3000:3000"]
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  pgdata:

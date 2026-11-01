@@ -1,0 +1,57 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Anonymous player. The app keeps the raw token; only its hash is stored.
+model Player {
+  id           String        @id @default(uuid()) @db.Uuid
+  nickname     String        @db.VarChar(16)
+  tokenHash    String        @unique @map("token_hash") @db.Char(64)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  dailyResults DailyResult[]
+  levelResults LevelResult[]
+
+  @@map("players")
+}
+
+/// Best verified result per player per daily challenge (UTC date).
+model DailyResult {
+  playerId   String   @map("player_id") @db.Uuid
+  date       String   @db.Char(10) // YYYY-MM-DD
+  score      Int
+  stars      Int
+  mistakes   Int
+  durationMs Int      @map("duration_ms")
+  moves      Json // kept so results can be re-verified later
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, date])
+  @@index([date, score(sort: Desc), durationMs])
+  @@map("daily_results")
+}
+
+/// Best verified result per player per campaign level.
+model LevelResult {
+  playerId   String   @map("player_id") @db.Uuid
+  level      Int
+  score      Int
+  stars      Int
+  mistakes   Int
+  durationMs Int      @map("duration_ms")
+  moves      Json
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, level])
+  @@map("level_results")
+}
