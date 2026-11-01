@@ -12,7 +12,7 @@ board like a snake, otherwise it bumps and you lose a heart. Clear the board.
 - Daily challenge: one seeded board per UTC day, harder Monday to Sunday
 - Leaderboards (Today / All time) with anonymous nicknames; results are
   verified by the server, which replays the moves on the same seeded board
-- Light and dark appearance
+- Appearance: System, Light or Dark (Apple design language on both platforms)
 
 ## Run
 
@@ -78,13 +78,16 @@ src/
     daily.ts       daily challenge seed and difficulty
 server/     Fastify API, Prisma schema + migrations, integration tests
   data/     storage.ts (AsyncStorage), api.ts (typed backend client)
-  state/    gameReducer.ts (all game rules as actions), feedback.ts (which
-            sound/haptic each transition causes), Progress/Settings contexts
+  state/    gameReducer.ts (per-level game rules as actions), feedback.ts
+            (which sound/haptic each transition causes)
+  store/    Redux Toolkit: settings, progress and player slices, async thunks
+            for the backend, AsyncStorage persistence via listener middleware,
+            hooks.ts (useSettings / useProgress / usePlayer facades)
   services/ sound.ts (synthesized effects), results.ts (offline outbox)
   ui/       screens/ (Home, LevelSelect, Game, Settings), components/, hooks/
 ```
 
-Dependencies only point inward: `ui -> state/services -> domain`, `data -> domain`.
+Dependencies only point inward: `ui -> store -> state/services/data -> domain`.
 
 ### How levels are made
 
