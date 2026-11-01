@@ -1,9 +1,14 @@
+export type Appearance = 'system' | 'light' | 'dark';
+
 export interface Settings {
   sound: boolean;
   vibration: boolean;
+  appearance: Appearance;
 }
 
-export const DEFAULT_SETTINGS: Settings = { sound: true, vibration: true };
+export const DEFAULT_SETTINGS: Settings = { sound: true, vibration: true, appearance: 'system' };
+
+const APPEARANCES: Appearance[] = ['system', 'light', 'dark'];
 
 /** Keeps every valid stored field; anything missing or corrupt falls back to the default. */
 export function parseSettings(raw: string | null): Settings {
@@ -15,6 +20,7 @@ export function parseSettings(raw: string | null): Settings {
     return {
       sound: typeof v?.sound === 'boolean' ? v.sound : DEFAULT_SETTINGS.sound,
       vibration: typeof v?.vibration === 'boolean' ? v.vibration : DEFAULT_SETTINGS.vibration,
+      appearance: APPEARANCES.includes(v?.appearance) ? v.appearance : DEFAULT_SETTINGS.appearance,
     };
   } catch {
     return DEFAULT_SETTINGS;

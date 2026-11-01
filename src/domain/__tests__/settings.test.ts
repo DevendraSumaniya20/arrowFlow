@@ -7,13 +7,19 @@ describe('parseSettings', () => {
   });
 
   it('keeps valid fields and repairs bad ones', () => {
-    expect(parseSettings('{"sound":false,"vibration":false}')).toEqual({
+    expect(parseSettings('{"sound":false,"vibration":false,"appearance":"dark"}')).toEqual({
       sound: false,
       vibration: false,
+      appearance: 'dark',
     });
-    expect(parseSettings('{"sound":false,"vibration":"yes"}')).toEqual({
+    expect(parseSettings('{"sound":false,"vibration":"yes","appearance":"purple"}')).toEqual({
       sound: false,
       vibration: true,
+      appearance: 'system',
     });
+  });
+
+  it('loads settings saved before Appearance existed', () => {
+    expect(parseSettings('{"sound":false,"vibration":true}').appearance).toBe('system');
   });
 });

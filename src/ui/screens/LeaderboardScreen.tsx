@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { usePlayer } from '../../store/hooks';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,10 +12,10 @@ import {
 } from 'react-native';
 import { api, ApiError, Board, Entry } from '../../data/api';
 import { utcDate } from '../../domain/daily';
-import { usePlayer } from '../../state/PlayerContext';
 import { Button } from '../components/Button';
 import { Stars } from '../components/Icons';
 import { ScoreArrow } from '../components/ScoreArrow';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useToday } from '../hooks/useToday';
 import { Palette, rounded, type, usePalette, useStyles } from '../theme';
@@ -91,7 +92,15 @@ export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }:
     <View style={styles.root}>
       <ScreenHeader title="Leaderboard" onBack={onBack} backLabel="Home" large />
 
-      <Segmented value={tab} onChange={setTab} />
+      <SegmentedControl
+        testIDPrefix="tab"
+        options={[
+          ['today', 'Today'],
+          ['all', 'All time'],
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
       <Text style={styles.caption}>
         {tab === 'today'
           ? `Today's daily challenge · resets in ${timeLeft(now)}`
@@ -160,32 +169,6 @@ export function LeaderboardScreen({ initialTab = 'today', onBack, onPlayDaily }:
   );
 }
 
-function Segmented({ value, onChange }: { value: LeaderboardTab; onChange: (t: LeaderboardTab) => void }) {
-  const styles = useStyles(makeStyles);
-  const tabs: [LeaderboardTab, string][] = [
-    ['today', 'Today'],
-    ['all', 'All time'],
-  ];
-  return (
-    <View style={styles.segmented} accessibilityRole="tablist">
-      {tabs.map(([key, label]) => {
-        const selected = key === value;
-        return (
-          <Pressable
-            key={key}
-            testID={`tab-${key}`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected }}
-            onPress={() => onChange(key)}
-            style={[styles.segment, selected && styles.segmentOn]}>
-            <Text style={[styles.segmentText, selected && styles.segmentTextOn]}>{label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 // Own tiny stylesheet: one is mounted per row, so it must not build the screen's styles.
 const makeSeparatorStyles = (c: Palette) =>
   StyleSheet.create({
@@ -223,6 +206,7 @@ function Row({
   return (
     <View
       style={[styles.row, first && styles.rowFirst, last && styles.rowLast, mine && styles.rowMine]}
+      testID={mine ? 'my-rank-row' : undefined}
       accessible
       accessibilityLabel={`Rank ${entry.rank}, ${entry.nickname}${mine ? ' (you)' : ''}, ${entry.score} points`}>
       <Text style={[styles.rank, entry.rank <= 3 && styles.rankTop]}>{entry.rank}</Text>
@@ -291,8 +275,9 @@ function Identity() {
       await (player ? rename(nickname) : register(nickname));
       setEditing(false);
     } catch (e) {
+      // register/rename reject with a plain { status, code } (status 0 = offline).
       setError(
-        e instanceof ApiError && e.status === 0
+        (e as { status?: number })?.status === 0
           ? "Can't reach the server. Try again when you're online."
           : 'That name was not accepted. Try another one.',
       );
@@ -345,19 +330,6 @@ function Identity() {
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
     root: { flex: 1, paddingHorizontal: 16 },
-    // Apple segmented control metrics.
-    segmented: { flexDirection: 'row', backgroundColor: c.surfaceAlt, ...rounded(9), padding: 2 },
-    segment: { flex: 1, minHeight: 32, ...rounded(7), alignItems: 'center', justifyContent: 'center' },
-    segmentOn: {
-      backgroundColor: c.surface,
-      shadowColor: '#000',
-      shadowOpacity: 0.12,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 2 },
-      elevation: 2,
-    },
-    segmentText: { ...type.footnote, fontWeight: '500', color: c.text },
-    segmentTextOn: { fontWeight: '600' },
     caption: { color: c.muted, ...type.footnote, textAlign: 'center', marginTop: 10 },
     identity: {
       flexDirection: 'row',

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import { BackHandler, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PlayerProvider, usePlayer } from './src/state/PlayerContext';
-import { ProgressProvider, useProgress } from './src/state/ProgressContext';
-import { SettingsProvider, useSettings } from './src/state/SettingsContext';
+import { Provider } from 'react-redux';
+import { useAppSelector, useOutboxSync } from './src/store/hooks';
+import { createAppStore } from './src/store/store';
 import { HomeScreen } from './src/ui/screens/HomeScreen';
 import { LeaderboardScreen, LeaderboardTab } from './src/ui/screens/LeaderboardScreen';
 import { LevelSelectScreen } from './src/ui/screens/LevelSelectScreen';
 import { CampaignGame, DailyGame } from './src/ui/screens/PlayScreens';
-import { usePalette } from './src/ui/theme';
+import { useIsDark, usePalette } from './src/ui/theme';
 
 type Route =
   | { name: 'home' }
@@ -18,29 +18,27 @@ type Route =
   | { name: 'daily'; date: string };
 
 function App() {
-  const dark = useColorScheme() === 'dark';
+  const [store] = useState(createAppStore);
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-      <SettingsProvider>
-        <ProgressProvider>
-          <PlayerProvider>
-            <Root />
-          </PlayerProvider>
-        </ProgressProvider>
-      </SettingsProvider>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <Root />
+      </SafeAreaProvider>
+    </Provider>
   );
 }
 
 function Root() {
   const insets = useSafeAreaInsets();
   const c = usePalette();
-  const loaded = [useProgress().loaded, useSettings().loaded, usePlayer().loaded].every(Boolean);
+  const dark = useIsDark();
+  const loaded = useAppSelector(s => s.settings.loaded && s.progress.loaded && s.player.loaded);
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const home = () => setRoute({ name: 'home' });
   const play = (level: number) => setRoute({ name: 'game', level });
   const daily = (date: string) => setRoute({ name: 'daily', date });
+
+  useOutboxSync();
 
   // Android hardware back returns home instead of closing the app.
   useEffect(() => {
@@ -96,6 +94,7 @@ function Root() {
         styles.root,
         { backgroundColor: c.bg, paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}>
+      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
       {loaded ? screen() : null}
     </View>
   );

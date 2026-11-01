@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useColorScheme } from 'react-native';
+import { useAppSelector } from '../store/hooks';
 
 // Apple system colours (iOS HIG), adjusted where needed to pass WCAG AA:
 // text >= 4.5:1, controls >= 3:1. src/ui/__tests__/contrast.test.ts enforces it.
@@ -7,6 +8,7 @@ export const light = {
   bg: '#f2f2f7', // systemGroupedBackground
   surface: '#ffffff', // secondarySystemGroupedBackground
   surfaceAlt: '#e9e9ee', // tertiary fill: segmented track, gray buttons, fields
+  segmentOn: '#ffffff', // selected segment, raised above the track
   border: '#c6c6c8', // opaqueSeparator, drawn as a hairline
   dot: '#c7c7cc', // systemGray4
   ink: '#1c1c1e', // arrows
@@ -29,6 +31,7 @@ export const dark: Palette = {
   bg: '#000000',
   surface: '#1c1c1e',
   surfaceAlt: '#2c2c2e',
+  segmentOn: '#636366', // Apple's dark selected segment is lighter than its track
   border: '#38383a',
   dot: '#48484a',
   ink: '#ffffff',
@@ -72,8 +75,15 @@ export const rounded = (radius: number, side?: 'top' | 'bottom') => {
   return { borderRadius: radius, ...curve };
 };
 
+/** Light or dark after applying the in-app Appearance choice over the system one. */
+export function useIsDark(): boolean {
+  const system = useColorScheme();
+  const appearance = useAppSelector(s => s.settings.value.appearance);
+  return appearance === 'system' ? system === 'dark' : appearance === 'dark';
+}
+
 export function usePalette(): Palette {
-  return useColorScheme() === 'dark' ? dark : light;
+  return useIsDark() ? dark : light;
 }
 
 /** Styles that follow light/dark. `factory` must be a module-level function. */

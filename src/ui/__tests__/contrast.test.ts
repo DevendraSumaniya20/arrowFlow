@@ -23,6 +23,7 @@ const TEXT: [Key, Key, string][] = [
   ['text', 'bg', 'titles on the screen'],
   ['text', 'surface', 'rows and cards'],
   ['text', 'surfaceAlt', 'segmented control, chips'],
+  ['text', 'segmentOn', 'selected segment'],
   ['muted', 'bg', 'captions'],
   ['muted', 'surface', 'secondary text in cards'],
   ['accent', 'bg', 'back button, links'],

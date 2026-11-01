@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { useSettings } from '../../store/hooks';
 import { Vibration } from 'react-native';
 import { playSound } from '../../services/sound';
 import { Feedback, feedbackFor } from '../../state/feedback';
 import { GameState } from '../../state/gameReducer';
-import { useSettings } from '../../state/SettingsContext';
 
 const HAPTICS: Partial<Record<Feedback, number>> = { bump: 40, lose: 150 };
 

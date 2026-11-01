@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { useProgress } from '../../store/hooks';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useProgress } from '../../state/ProgressContext';
 import { Lock, Stars } from '../components/Icons';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Palette, rounded, type, usePalette, useStyles } from '../theme';

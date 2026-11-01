@@ -1,8 +1,8 @@
 import React from 'react';
+import { useProgress, useSettings } from '../../store/hooks';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useProgress } from '../../state/ProgressContext';
-import { useSettings } from '../../state/SettingsContext';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { Palette, rounded, type, usePalette, useStyles } from '../theme';
 
 const RULES = [
@@ -59,6 +59,20 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             label="Vibration"
             value={settings.vibration}
             onChange={vibration => updateSettings({ vibration })}
+          />
+        </View>
+
+        <Text style={styles.sectionHeader}>APPEARANCE</Text>
+        <View style={[styles.group, styles.padded]}>
+          <SegmentedControl
+            testIDPrefix="appearance"
+            options={[
+              ['system', 'System'],
+              ['light', 'Light'],
+              ['dark', 'Dark'],
+            ]}
+            value={settings.appearance}
+            onChange={appearance => updateSettings({ appearance })}
           />
         </View>
 
@@ -128,6 +142,7 @@ const makeStyles = (c: Palette) =>
     content: { paddingHorizontal: 16, paddingTop: 8 },
     group: { backgroundColor: c.surface, ...rounded(12), overflow: 'hidden' },
     gapAbove: { marginTop: 32 },
+    padded: { padding: 8 },
     row: {
       minHeight: 44,
       paddingHorizontal: 16,

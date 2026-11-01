@@ -4,6 +4,6 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '<rootDir>/server/'],
   modulePathIgnorePatterns: ['<rootDir>/server/'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native(-[a-z-]+)?|@react-native(-community)?|@react-native-async-storage)/)',
+    'node_modules/(?!((jest-)?react-native(-[a-z-]+)?|@react-native(-community)?|@react-native-async-storage|react-redux|@reduxjs/toolkit|redux|immer|reselect)/)',
   ],
 };

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
+import { useProgress } from '../../store/hooks';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { generateLevel } from '../../domain/generator';
 import { dailyStreak, totalScore, totalStars } from '../../domain/progress';
-import { useProgress } from '../../state/ProgressContext';
 import { BoardPreview } from '../components/BoardPreview';
 import { Button } from '../components/Button';
 import { DailyCard } from '../components/DailyCard';

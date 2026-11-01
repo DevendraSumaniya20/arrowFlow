@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
+import { usePlayer, useProgress } from '../../store/hooks';
 import { generateDailyLevel } from '../../domain/daily';
 import { generateLevel } from '../../domain/generator';
-import { usePlayer } from '../../state/PlayerContext';
-import { useProgress } from '../../state/ProgressContext';
 import { dailyNote } from '../dailyNote';
 import { GameScreen, WinResult } from './GameScreen';
 

@@ -1,12 +1,14 @@
 import React from 'react';
 import { Text } from 'react-native';
+import { Provider } from 'react-redux';
 import ReactTestRenderer from 'react-test-renderer';
+import { createAppStore } from '../../store/store';
 import { ScreenHeader } from '../components/ScreenHeader';
 
 const render = (el: React.ReactElement) => {
   let root!: ReactTestRenderer.ReactTestRenderer;
   ReactTestRenderer.act(() => {
-    root = ReactTestRenderer.create(el);
+    root = ReactTestRenderer.create(<Provider store={createAppStore()}>{el}</Provider>);
   });
   return root;
 };
