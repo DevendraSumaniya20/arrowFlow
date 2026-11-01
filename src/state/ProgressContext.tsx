@@ -1,12 +1,13 @@
 import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import { loadProgress, saveProgress } from '../data/storage';
-import { applyWin, EMPTY_PROGRESS, Progress } from '../domain/progress';
+import { applyDailyWin, applyWin, EMPTY_PROGRESS, Progress } from '../domain/progress';
 import { usePersistentState } from './usePersistentState';
 
 interface ProgressValue {
   loaded: boolean;
   progress: Progress;
   recordWin: (level: number, stars: number, score: number) => void;
+  recordDailyWin: (date: string, stars: number, score: number) => void;
   resetProgress: () => void;
 }
 
@@ -24,11 +25,16 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       setProgress(p => applyWin(p, level, stars, score)),
     [setProgress],
   );
+  const recordDailyWin = useCallback(
+    (date: string, stars: number, score: number) =>
+      setProgress(p => applyDailyWin(p, date, stars, score)),
+    [setProgress],
+  );
   const resetProgress = useCallback(() => setProgress(EMPTY_PROGRESS), [setProgress]);
 
   const value = useMemo(
-    () => ({ loaded, progress, recordWin, resetProgress }),
-    [loaded, progress, recordWin, resetProgress],
+    () => ({ loaded, progress, recordWin, recordDailyWin, resetProgress }),
+    [loaded, progress, recordWin, recordDailyWin, resetProgress],
   );
   return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>;
 }
