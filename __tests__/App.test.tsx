@@ -48,6 +48,7 @@ test('settings toggles are saved to storage', async () => {
   expect(JSON.parse(await AsyncStorage.getItem('arrowswap/settings/v1'))).toEqual({
     sound: false,
     vibration: true,
+    appearance: 'system',
   });
 });
 
@@ -174,4 +175,29 @@ test('a token the server no longer knows asks to join again and keeps results', 
 
   expect(await AsyncStorage.getItem('arrowswap/player/v1')).toBeNull();
   expect(JSON.parse(await AsyncStorage.getItem('arrowswap/outbox/v1'))).toEqual([queued]);
+});
+
+test('appearance: Dark overrides the system theme and is saved', async () => {
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  await AsyncStorage.clear();
+  let root!: ReactTestRenderer.ReactTestRenderer;
+  await ReactTestRenderer.act(() => {
+    root = ReactTestRenderer.create(<App />);
+  });
+  const byId = (id: string) => root.root.findAll(n => n.props.testID === id);
+  for (let i = 0; i < 20 && byId('settings-button').length === 0; i++) {
+    await flush();
+  }
+  const rootBg = () => {
+    const json = root.toJSON() as ReactTestRenderer.ReactTestRendererJSON;
+    return [json.props.style].flat().find(st => st?.backgroundColor)?.backgroundColor;
+  };
+  expect(rootBg()).toBe('#f2f2f7'); // test renderer reports a light system theme
+
+  await ReactTestRenderer.act(() => byId('settings-button')[0].props.onPress());
+  await ReactTestRenderer.act(() => byId('appearance-dark').find(n => n.props.onPress)!.props.onPress());
+  await flush();
+
+  expect(rootBg()).toBe('#000000');
+  expect(JSON.parse(await AsyncStorage.getItem('arrowswap/settings/v1')).appearance).toBe('dark');
 });
