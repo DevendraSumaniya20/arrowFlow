@@ -96,7 +96,7 @@ export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: P
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title={title} onBack={onHome} right={<SettingsButton />} />
+      <ScreenHeader title={title} onBack={onHome} backLabel="Home" right={<SettingsButton />} />
 
       <View style={styles.statusRow}>
         <View style={styles.chip}>
@@ -229,7 +229,7 @@ const makeStyles = (c: Palette) =>
       minWidth: 22,
       height: 22,
       borderRadius: 11,
-      backgroundColor: c.accent,
+      backgroundColor: c.accentFill,
       alignItems: 'center',
       justifyContent: 'center',
     },

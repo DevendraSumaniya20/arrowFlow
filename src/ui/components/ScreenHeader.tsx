@@ -27,7 +27,9 @@ export function ScreenHeader({ title, onBack, backLabel = 'Back', right, large }
           <ChevronLeft size={24} />
           <Text style={styles.backLabel}>{backLabel}</Text>
         </Pressable>
-        {!large && (
+        {large ? (
+          <View style={styles.spacer} />
+        ) : (
           <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
             {title}
           </Text>
@@ -35,7 +37,12 @@ export function ScreenHeader({ title, onBack, backLabel = 'Back', right, large }
         <View style={styles.right}>{right}</View>
       </View>
       {large && (
-        <Text style={styles.largeTitle} accessibilityRole="header" numberOfLines={1}>
+        <Text
+          style={styles.largeTitle}
+          accessibilityRole="header"
+          numberOfLines={1}
+          adjustsFontSizeToFit // large accessibility text sizes shrink instead of truncating
+          minimumFontScale={0.5}>
           {title}
         </Text>
       )}
@@ -50,6 +57,7 @@ const makeStyles = (c: Palette) =>
     pressed: { opacity: 0.5 },
     backLabel: { ...type.body, color: c.accent, marginLeft: -2 },
     title: { flex: 1, textAlign: 'center', ...type.headline, color: c.text },
+    spacer: { flex: 1 },
     right: { minWidth: 88, minHeight: 44, alignItems: 'flex-end', justifyContent: 'center' },
     largeTitle: { ...type.largeTitle, color: c.text, marginTop: 2, marginBottom: 8 },
   });

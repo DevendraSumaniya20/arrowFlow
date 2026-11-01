@@ -56,7 +56,7 @@ const makeStyles = (c: Palette) =>
       justifyContent: 'center',
     },
     row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    primary: { backgroundColor: c.accent },
+    primary: { backgroundColor: c.accentFill },
     gray: { backgroundColor: c.surfaceAlt },
     pressed: { opacity: 0.6 },
     disabled: { opacity: 0.4 },

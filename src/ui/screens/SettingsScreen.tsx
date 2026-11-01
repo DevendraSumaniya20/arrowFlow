@@ -109,7 +109,8 @@ function ToggleRow({
         accessibilityLabel={label}
         value={value}
         onValueChange={onChange}
-        trackColor={{ true: '#34c759', false: c.surfaceAlt }} // iOS systemGreen
+        trackColor={{ true: c.success, false: c.switchOff }}
+        ios_backgroundColor={c.switchOff}
       />
     </View>
   );

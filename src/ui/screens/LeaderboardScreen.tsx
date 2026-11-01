@@ -186,11 +186,18 @@ function Segmented({ value, onChange }: { value: LeaderboardTab; onChange: (t: L
   );
 }
 
+// Own tiny stylesheet: one is mounted per row, so it must not build the screen's styles.
+const makeSeparatorStyles = (c: Palette) =>
+  StyleSheet.create({
+    wrap: { backgroundColor: c.surface },
+    line: { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginLeft: 60 },
+  });
+
 function Separator() {
-  const styles = useStyles(makeStyles);
+  const styles = useStyles(makeSeparatorStyles);
   return (
-    <View style={styles.separatorWrap}>
-      <View style={styles.separator} />
+    <View style={styles.wrap}>
+      <View style={styles.line} />
     </View>
   );
 }
@@ -401,11 +408,9 @@ const makeStyles = (c: Palette) =>
       paddingHorizontal: 16,
       backgroundColor: c.surface,
     },
-    rowFirst: { borderTopLeftRadius: 12, borderTopRightRadius: 12, borderCurve: 'continuous' },
-    rowLast: { borderBottomLeftRadius: 12, borderBottomRightRadius: 12, borderCurve: 'continuous' },
+    rowFirst: rounded(12, 'top'),
+    rowLast: rounded(12, 'bottom'),
     rowMine: { backgroundColor: c.accentSoft },
-    separatorWrap: { backgroundColor: c.surface },
-    separator: { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginLeft: 60 },
     rank: {
       width: 32,
       color: c.muted,

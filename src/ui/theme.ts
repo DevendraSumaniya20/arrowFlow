@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 
-// Apple system colours (iOS HIG): grouped background, label greys, system blue.
-const light = {
+// Apple system colours (iOS HIG), adjusted where needed to pass WCAG AA:
+// text >= 4.5:1, controls >= 3:1. src/ui/__tests__/contrast.test.ts enforces it.
+export const light = {
   bg: '#f2f2f7', // systemGroupedBackground
   surface: '#ffffff', // secondarySystemGroupedBackground
   surfaceAlt: '#e9e9ee', // tertiary fill: segmented track, gray buttons, fields
@@ -11,17 +12,20 @@ const light = {
   ink: '#1c1c1e', // arrows
   text: '#000000', // label
   muted: '#6c6c70', // secondaryLabel, darkened to keep 4.5:1
-  accent: '#007aff', // systemBlue
+  accent: '#0062cc', // systemBlue, accessible tone: tint for text and icons
+  accentFill: '#0062cc', // filled buttons and badges, behind onAccent
   accentSoft: '#e3eeff',
   onAccent: '#ffffff',
-  danger: '#ff3b30', // systemRed
+  danger: '#c4001a', // systemRed, accessible tone
+  success: '#248a3d', // systemGreen, accessible tone (switch on)
+  switchOff: '#8e8e93', // systemGray: off track must show against white
   star: '#ff9500', // systemOrange
   overlay: 'rgba(0, 0, 0, 0.4)',
 };
 
 export type Palette = typeof light;
 
-const dark: Palette = {
+export const dark: Palette = {
   bg: '#000000',
   surface: '#1c1c1e',
   surfaceAlt: '#2c2c2e',
@@ -30,10 +34,13 @@ const dark: Palette = {
   ink: '#ffffff',
   text: '#ffffff',
   muted: '#98989f',
-  accent: '#0a84ff',
+  accent: '#409cff', // lighter tint so text stays readable on dark fills
+  accentFill: '#0a6fd6', // darker fill so white labels stay readable
   accentSoft: '#0b2a4f',
   onAccent: '#ffffff',
-  danger: '#ff453a',
+  danger: '#ff6961',
+  success: '#30d158',
+  switchOff: '#7c7c80',
   star: '#ff9f0a',
   overlay: 'rgba(0, 0, 0, 0.6)',
 };
@@ -50,10 +57,20 @@ export const type = {
   subhead: { fontSize: 15, fontWeight: '400' as const, letterSpacing: -0.24 },
   footnote: { fontSize: 13, fontWeight: '400' as const, letterSpacing: -0.08 },
   caption: { fontSize: 12, fontWeight: '400' as const },
+  caption2: { fontSize: 11, fontWeight: '400' as const, letterSpacing: 0.07 }, // Apple's floor
 };
 
 /** Apple's continuous ("squircle") corners; ignored where unsupported. */
-export const rounded = (radius: number) => ({ borderRadius: radius, borderCurve: 'continuous' as const });
+export const rounded = (radius: number, side?: 'top' | 'bottom') => {
+  const curve = { borderCurve: 'continuous' as const };
+  if (side === 'top') {
+    return { borderTopLeftRadius: radius, borderTopRightRadius: radius, ...curve };
+  }
+  if (side === 'bottom') {
+    return { borderBottomLeftRadius: radius, borderBottomRightRadius: radius, ...curve };
+  }
+  return { borderRadius: radius, ...curve };
+};
 
 export function usePalette(): Palette {
   return useColorScheme() === 'dark' ? dark : light;

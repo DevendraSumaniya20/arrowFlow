@@ -104,7 +104,7 @@ const makeStyles = (c: Palette) =>
     step: { width: 10, borderRadius: 3, backgroundColor: c.surfaceAlt },
     stepPast: { backgroundColor: c.dot },
     stepToday: { backgroundColor: c.accent },
-    weekDay: { color: c.muted, fontSize: 11, fontWeight: '600' }, // caption2: Apple's 11pt floor
+    weekDay: { color: c.muted, ...type.caption2, fontWeight: '600' },
     weekDayToday: { color: c.accent, fontWeight: '700' },
     status: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
     statusText: { color: c.muted, ...type.footnote, marginLeft: 2 },
