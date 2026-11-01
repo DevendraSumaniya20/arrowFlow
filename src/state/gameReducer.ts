@@ -27,7 +27,11 @@ export interface GameState {
   hintId: number | null;
   bump: Bump | null;
   status: GameStatus;
+  moves: Move[]; // every effective tap/hint, replayed by the server to verify results
 }
+
+/** Player inputs that change the game; enough to replay it exactly. */
+export type Move = { type: 'tap'; row: number; col: number } | { type: 'hint' };
 
 export type GameAction =
   | { type: 'tap'; row: number; col: number }
@@ -48,6 +52,7 @@ export function initGame(level: Level): GameState {
     hintId: null,
     bump: null,
     status: 'playing',
+    moves: [],
   };
 }
 
@@ -72,6 +77,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         const won = arrows.length === 0;
         return {
           ...state,
+          moves: [...state.moves, { type: 'tap', row: action.row, col: action.col }],
           arrows,
           leaving: [...state.leaving, arrow],
           streak,
@@ -84,6 +90,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const lives = state.lives - 1;
       return {
         ...state,
+        moves: [...state.moves, { type: 'tap', row: action.row, col: action.col }],
         lives,
         mistakes: state.mistakes + 1,
         streak: 0,
@@ -101,7 +108,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!free) {
         return state;
       }
-      return { ...state, hintId: free.id, hintsLeft: state.hintsLeft - 1 };
+      return {
+        ...state,
+        hintId: free.id,
+        hintsLeft: state.hintsLeft - 1,
+        moves: [...state.moves, { type: 'hint' }],
+      };
     }
     case 'restart':
       return initGame(state.level);

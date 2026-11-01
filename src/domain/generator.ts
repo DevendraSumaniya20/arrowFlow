@@ -29,13 +29,16 @@ const OPPOSITE: Record<Direction, Direction> = {
   right: 'left',
 };
 
-/** Deterministic per level: same number, same board on every device. */
-export function generateLevel(n: number): Level {
+/**
+ * Deterministic: same difficulty + seed, same board on every device and on the
+ * server. Campaign levels use the default seed; daily challenges pass their own.
+ */
+export function generateLevel(n: number, seed = n * 2654435761): Level {
   const { size, fill, maxLength, candidates } = levelConfig(n);
   let best: Level | null = null;
   let bestScore = -1;
   for (let k = 0; k < candidates; k++) {
-    const level = buildBoard(n, size, fill, maxLength, createRng(n * 2654435761 + k * 97));
+    const level = buildBoard(n, size, fill, maxLength, createRng(seed + k * 97));
     // Deep chains of dependencies and few free starting moves = hard.
     const score =
       solveDepth(level.arrows, size) * 10 -

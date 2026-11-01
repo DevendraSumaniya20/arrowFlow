@@ -98,7 +98,7 @@ describe('progress', () => {
   it('keeps best results and unlocks the next level', () => {
     let p = applyWin(EMPTY_PROGRESS, 1, 3, 120);
     p = applyWin(p, 1, 1, 50);
-    expect(p).toEqual({ unlocked: 2, stars: { 1: 3 }, best: { 1: 120 } });
+    expect(p).toEqual({ unlocked: 2, stars: { 1: 3 }, best: { 1: 120 }, daily: {} });
   });
 
   it('falls back to empty on corrupt storage', () => {
@@ -108,6 +108,7 @@ describe('progress', () => {
       unlocked: 5,
       stars: { 4: 2 },
       best: { 4: 80 },
+      daily: {},
     });
   });
 });
