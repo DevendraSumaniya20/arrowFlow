@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProgress } from '../../state/ProgressContext';
 import { useSettings } from '../../state/SettingsContext';
 import { Button } from '../components/Button';
-import { colors } from '../theme';
+import { Palette, usePalette, useStyles } from '../theme';
 
 const RULES = [
   'Tap an arrow to send it off the board in the direction it points.',
@@ -14,6 +14,7 @@ const RULES = [
 ];
 
 export function SettingsScreen({ onClose }: { onClose: () => void }) {
+  const styles = useStyles(makeStyles);
   const { settings, updateSettings } = useSettings();
   const { resetProgress } = useProgress();
   const insets = useSafeAreaInsets();
@@ -64,7 +65,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
         <Button
           testID="reset-button"
           label="Reset progress"
-          variant="ghost"
+          variant="destructive"
           onPress={confirmReset}
           style={styles.reset}
         />
@@ -84,6 +85,8 @@ function ToggleRow({
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const styles = useStyles(makeStyles);
+  const c = usePalette();
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -92,14 +95,15 @@ function ToggleRow({
         accessibilityLabel={label}
         value={value}
         onValueChange={onChange}
-        trackColor={{ true: colors.accent, false: colors.border }}
+        trackColor={{ true: c.accent, false: c.border }}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+  root: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -107,12 +111,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800' },
+  title: { color: c.text, fontSize: 24, fontWeight: '800' },
   content: { paddingHorizontal: 16, gap: 12 },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 4,
@@ -123,9 +127,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  rowLabel: { color: colors.text, fontSize: 17, fontWeight: '600' },
-  divider: { height: 1, backgroundColor: colors.border },
-  section: { color: colors.muted, fontSize: 13, fontWeight: '700', marginTop: 8, marginLeft: 4 },
-  rule: { color: colors.text, fontSize: 15, lineHeight: 21, paddingVertical: 8 },
+  rowLabel: { color: c.text, fontSize: 17, fontWeight: '600' },
+  divider: { height: 1, backgroundColor: c.border },
+  section: { color: c.muted, fontSize: 13, fontWeight: '700', marginTop: 8, marginLeft: 4 },
+  rule: { color: c.text, fontSize: 15, lineHeight: 21, paddingVertical: 8 },
   reset: { marginTop: 12 },
 });

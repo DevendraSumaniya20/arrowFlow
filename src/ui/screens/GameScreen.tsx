@@ -1,26 +1,39 @@
-import React, { useCallback, useEffect, useMemo, useReducer } from 'react';
+import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { difficultyOf, generateLevel } from '../../domain/generator';
+import { difficultyOf } from '../../domain/generator';
 import { MAX_LIVES, starsFor } from '../../domain/scoring';
-import { gameReducer, initGame } from '../../state/gameReducer';
-import { useProgress } from '../../state/ProgressContext';
+import { Level } from '../../domain/types';
+import { gameReducer, initGame, Move } from '../../state/gameReducer';
 import { Board } from '../components/Board';
 import { Bulb, Heart, Restart } from '../components/Icons';
 import { ResultOverlay } from '../components/ResultOverlay';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { SettingsButton } from '../components/SettingsButton';
 import { useGameFeedback } from '../hooks/useGameFeedback';
-import { colors } from '../theme';
+import { Palette, useStyles } from '../theme';
+
+export interface WinResult {
+  score: number;
+  stars: number;
+  moves: Move[];
+  durationMs: number;
+}
 
 interface Props {
-  levelNumber: number;
-  onNext: () => void;
+  level: Level;
+  title: string;
+  wonTitle?: string;
+  /** Saves the win; may resolve to a short note for the result card (e.g. rank). */
+  onWin: (result: WinResult) => Promise<string | null> | void;
+  primary?: { label: string; onPress: () => void; testID: string };
   onHome: () => void;
 }
 
-export function GameScreen({ levelNumber, onNext, onHome }: Props) {
-  const level = useMemo(() => generateLevel(levelNumber), [levelNumber]);
+export function GameScreen({ level, title, wonTitle, onWin, primary, onHome }: Props) {
+  const styles = useStyles(makeStyles);
   const [state, dispatch] = useReducer(gameReducer, level, initGame);
-  const { recordWin } = useProgress();
+  const [note, setNote] = useState<string | null>(null);
+  const startedAt = useRef(Date.now());
 
   const onTap = useCallback(
     (row: number, col: number) => dispatch({ type: 'tap', row, col }),
@@ -30,12 +43,27 @@ export function GameScreen({ levelNumber, onNext, onHome }: Props) {
 
   useGameFeedback(state);
 
+  // A fresh or restarted board restarts the clock.
+  useEffect(() => {
+    if (state.moves.length === 0) {
+      startedAt.current = Date.now();
+      setNote(null);
+    }
+  }, [state.moves.length]);
+
   const stars = starsFor(state.mistakes);
   useEffect(() => {
-    if (state.status === 'won') {
-      recordWin(levelNumber, stars, state.score);
+    if (state.status !== 'won') {
+      return;
     }
-    // Record once when the level is won.
+    let alive = true;
+    Promise.resolve(
+      onWin({ score: state.score, stars, moves: state.moves, durationMs: Date.now() - startedAt.current }),
+    ).then(n => alive && n && setNote(n));
+    return () => {
+      alive = false;
+    };
+    // Report once per win.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.status]);
 
@@ -45,26 +73,12 @@ export function GameScreen({ levelNumber, onNext, onHome }: Props) {
 
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={onHome}
-          hitSlop={12}
-          style={styles.side}
-          testID="back-button"
-          accessibilityRole="button"
-          accessibilityLabel="Back to home">
-          <Text style={styles.back}>‹</Text>
-        </Pressable>
-        <Text style={styles.title}>Level {levelNumber}</Text>
-        <View style={[styles.side, styles.right]}>
-          <SettingsButton />
-        </View>
-      </View>
+      <ScreenHeader title={title} onBack={onHome} right={<SettingsButton />} />
 
       <View style={styles.statusRow}>
         <View style={styles.chip}>
           <Text style={styles.chipText} testID="score">
-            ★ {state.score}
+            {state.score} pts
           </Text>
         </View>
         <View
@@ -94,23 +108,23 @@ export function GameScreen({ levelNumber, onNext, onHome }: Props) {
           testID="hint-button"
           label={`Hint, ${state.hintsLeft} left`}
           badge={state.hintsLeft}
-          disabled={
-            state.hintsLeft <= 0 || state.hintId !== null || state.status !== 'playing'
-          }
+          disabled={state.hintsLeft <= 0 || state.hintId !== null || state.status !== 'playing'}
           onPress={() => dispatch({ type: 'hint' })}>
-          <Bulb />
+          <Bulb size={26} />
         </RoundButton>
         <RoundButton testID="restart-button" label="Restart level" onPress={() => dispatch({ type: 'restart' })}>
-          <Restart />
+          <Restart size={26} />
         </RoundButton>
       </View>
 
       {showResult && (
         <ResultOverlay
           won={state.status === 'won'}
+          wonTitle={wonTitle}
           stars={stars}
           score={state.score}
-          onNext={onNext}
+          note={note}
+          primary={primary}
           onRetry={() => dispatch({ type: 'restart' })}
           onHome={onHome}
         />
@@ -134,6 +148,7 @@ function RoundButton({
   onPress: () => void;
   children: React.ReactNode;
 }) {
+  const styles = useStyles(makeStyles);
   return (
     <Pressable
       onPress={onPress}
@@ -153,63 +168,49 @@ function RoundButton({
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 12 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  side: { width: 48 },
-  right: { alignItems: 'flex-end' },
-  back: { color: colors.accent, fontSize: 40, lineHeight: 44 },
-  title: { color: colors.text, fontSize: 18, fontWeight: '700' },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  chip: {
-    minWidth: 72,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: colors.border,
-    alignItems: 'center',
-  },
-  chipText: { color: colors.text, fontSize: 13, fontWeight: '600' },
-  hearts: { flexDirection: 'row', gap: 4 },
-  muted: { color: colors.muted, fontSize: 13, textAlign: 'center', marginTop: 8 },
-  boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 28,
-    paddingVertical: 16,
-  },
-  round: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dim: { opacity: 0.45 },
-  badge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: { color: colors.onAccent, fontSize: 12, fontWeight: '700' },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    root: { flex: 1, paddingHorizontal: 12 },
+    statusRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 4,
+    },
+    chip: {
+      minWidth: 76,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 10,
+      backgroundColor: c.surfaceAlt,
+      alignItems: 'center',
+    },
+    chipText: { color: c.text, fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'] },
+    hearts: { flexDirection: 'row', gap: 4 },
+    muted: { color: c.muted, fontSize: 13, textAlign: 'center', marginTop: 10 },
+    boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    footer: { flexDirection: 'row', justifyContent: 'center', gap: 28, paddingVertical: 16 },
+    round: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dim: { opacity: 0.45 },
+    badge: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      minWidth: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: c.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeText: { color: c.onAccent, fontSize: 12, fontWeight: '800' },
+  });

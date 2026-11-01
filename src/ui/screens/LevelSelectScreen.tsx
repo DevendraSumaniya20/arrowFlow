@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useProgress } from '../../state/ProgressContext';
-import { colors } from '../theme';
+import { Lock, Stars } from '../components/Icons';
+import { ScreenHeader } from '../components/ScreenHeader';
+import { Palette, usePalette, useStyles } from '../theme';
 
 interface Props {
   onPlay: (level: number) => void;
@@ -12,33 +14,26 @@ interface Props {
 const PAGE = 60;
 
 export function LevelSelectScreen({ onPlay, onBack }: Props) {
+  const styles = useStyles(makeStyles);
+  const c = usePalette();
   const { progress } = useProgress();
   const [count, setCount] = useState(() => progress.unlocked + PAGE);
   const levels = useMemo(() => Array.from({ length: count }, (_, i) => i + 1), [count]);
 
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={onBack}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Back to home">
-          <Text style={styles.back}>‹</Text>
-        </Pressable>
-        <Text style={styles.title}>Levels</Text>
-        <View style={styles.spacer} />
-      </View>
+      <ScreenHeader title="Levels" onBack={onBack} />
       <FlatList
         data={levels}
         numColumns={5}
         keyExtractor={n => String(n)}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
-        onEndReached={() => setCount(c => c + PAGE)}
+        onEndReached={() => setCount(n => n + PAGE)}
         onEndReachedThreshold={0.5}
         renderItem={({ item: n }) => {
           const locked = n > progress.unlocked;
+          const current = n === progress.unlocked;
           const stars = progress.stars[n] ?? 0;
           return (
             <Pressable
@@ -48,17 +43,19 @@ export function LevelSelectScreen({ onPlay, onBack }: Props) {
               accessibilityLabel={locked ? `Level ${n}, locked` : `Level ${n}, ${stars} stars`}
               style={({ pressed }) => [
                 styles.tile,
+                current && styles.current,
                 locked && styles.locked,
                 pressed && styles.pressed,
               ]}>
-              <Text style={[styles.num, locked && styles.lockedText]}>
-                {locked ? '🔒' : n}
-              </Text>
-              {!locked && (
-                <Text style={styles.stars}>
-                  {'★'.repeat(stars)}
-                  <Text style={styles.starOff}>{'★'.repeat(3 - stars)}</Text>
-                </Text>
+              {locked ? (
+                <Lock size={18} color={c.muted} />
+              ) : (
+                <>
+                  <Text style={[styles.num, current && styles.numCurrent]}>{n}</Text>
+                  <View style={styles.stars}>
+                    <Stars count={stars} size={10} />
+                  </View>
+                </>
               )}
             </Pressable>
           );
@@ -68,33 +65,25 @@ export function LevelSelectScreen({ onPlay, onBack }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 16 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  back: { color: colors.accent, fontSize: 40, lineHeight: 44, width: 60 },
-  title: { color: colors.text, fontSize: 22, fontWeight: '800' },
-  spacer: { width: 60 },
-  list: { paddingBottom: 24, gap: 10 },
-  row: { gap: 10 },
-  tile: {
-    flex: 1,
-    aspectRatio: 1,
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  locked: { opacity: 0.45 },
-  pressed: { opacity: 0.7 },
-  num: { color: colors.text, fontSize: 20, fontWeight: '800' },
-  lockedText: { fontSize: 16 },
-  stars: { color: colors.star, fontSize: 11, marginTop: 2 },
-  starOff: { color: colors.border },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    root: { flex: 1, paddingHorizontal: 12 },
+    list: { paddingTop: 8, paddingBottom: 24, gap: 10 },
+    row: { gap: 10 },
+    tile: {
+      flex: 1,
+      aspectRatio: 1,
+      borderRadius: 16,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    current: { borderColor: c.accent, borderWidth: 2 },
+    locked: { backgroundColor: c.bg },
+    pressed: { opacity: 0.7 },
+    num: { color: c.text, fontSize: 20, fontWeight: '800', fontVariant: ['tabular-nums'] },
+    numCurrent: { color: c.accent },
+    stars: { flexDirection: 'row', marginTop: 3 },
+  });

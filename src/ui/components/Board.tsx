@@ -9,7 +9,7 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 import { buildOccupancy, cellKey, freeArrowIds } from '../../domain/board';
 import { GameState } from '../../state/gameReducer';
-import { colors } from '../theme';
+import { usePalette } from '../theme';
 import { ArrowPiece } from './ArrowPiece';
 
 interface Props {
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export function Board({ state, onTap, onLeft }: Props) {
+  const colors = usePalette();
   const { width, height } = useWindowDimensions();
   const boardPx = Math.min(width - 24, height * 0.6, 600);
   const { size } = state.level;

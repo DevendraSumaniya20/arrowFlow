@@ -1,17 +1,20 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
-import { colors } from '../theme';
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Palette, usePalette, useStyles } from '../theme';
 
 interface Props {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'ghost';
+  variant?: 'primary' | 'ghost' | 'destructive';
   disabled?: boolean;
   style?: ViewStyle;
   testID?: string;
+  icon?: React.ReactNode;
 }
 
-export function Button({ label, onPress, variant = 'primary', disabled, style, testID }: Props) {
+export function Button({ label, onPress, variant = 'primary', disabled, style, testID, icon }: Props) {
+  const styles = useStyles(makeStyles);
+  const c = usePalette();
   const primary = variant === 'primary';
   return (
     <Pressable
@@ -24,25 +27,37 @@ export function Button({ label, onPress, variant = 'primary', disabled, style, t
       style={({ pressed }) => [
         styles.base,
         primary ? styles.primary : styles.ghost,
-        (pressed || disabled) && styles.dim,
+        pressed && styles.pressed,
+        disabled && styles.disabled,
         style,
       ]}>
-      <Text style={[styles.label, primary && styles.primaryLabel]}>{label}</Text>
+      <View style={styles.row}>
+        {icon}
+        <Text
+          style={[
+            styles.label,
+            { color: primary ? c.onAccent : variant === 'destructive' ? c.danger : c.text },
+          ]}>
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 48,
-    paddingHorizontal: 22,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primary: { backgroundColor: colors.accent },
-  ghost: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  dim: { opacity: 0.6 },
-  label: { color: colors.text, fontSize: 17, fontWeight: '700' },
-  primaryLabel: { color: colors.onAccent },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    base: {
+      minHeight: 52,
+      paddingHorizontal: 20,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    primary: { backgroundColor: c.accent },
+    ghost: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
+    pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
+    disabled: { opacity: 0.45 },
+    label: { fontSize: 17, fontWeight: '700' },
+  });

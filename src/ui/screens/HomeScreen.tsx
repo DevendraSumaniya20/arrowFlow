@@ -1,72 +1,105 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { totalScore, totalStars } from '../../domain/progress';
+import React, { useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { utcDate } from '../../domain/daily';
+import { generateLevel } from '../../domain/generator';
+import { dailyStreak, totalScore, totalStars } from '../../domain/progress';
 import { useProgress } from '../../state/ProgressContext';
+import { BoardPreview } from '../components/BoardPreview';
 import { Button } from '../components/Button';
+import { DailyCard } from '../components/DailyCard';
+import { Grid, Podium } from '../components/Icons';
 import { Logo } from '../components/Logo';
 import { SettingsButton } from '../components/SettingsButton';
-import { colors } from '../theme';
+import { Palette, useStyles } from '../theme';
 
 interface Props {
   onPlay: (level: number) => void;
+  onDaily: (date: string) => void;
   onLevels: () => void;
+  onLeaderboard: () => void;
 }
 
-export function HomeScreen({ onPlay, onLevels }: Props) {
+export function HomeScreen({ onPlay, onDaily, onLevels, onLeaderboard }: Props) {
+  const styles = useStyles(makeStyles);
   const { progress } = useProgress();
+  const today = utcDate();
+  const level = progress.unlocked;
+  const next = useMemo(() => generateLevel(level), [level]);
+  const { width, height } = useWindowDimensions();
+  const previewSize = Math.min(width - 120, height * 0.28, 280);
+
   return (
-    <View style={styles.root}>
+    <ScrollView contentContainerStyle={styles.root}>
       <View style={styles.topBar}>
+        <View style={styles.brand}>
+          <Logo size={34} />
+          <Text style={styles.wordmark} accessibilityRole="header">
+            Arrow Flow
+          </Text>
+        </View>
         <SettingsButton />
       </View>
-      <View style={styles.hero}>
-        <Logo />
-        <Text style={styles.title}>ArrowSwap</Text>
-        <Text style={styles.tagline}>Find the free path. Tap arrows in the right order. Clear the board.</Text>
-      </View>
-      <View style={styles.stats}>
-        <Stat label="Stars" value={totalStars(progress)} />
-        <Stat label="Score" value={totalScore(progress)} />
-        <Stat label="Level" value={progress.unlocked} />
-      </View>
-      <View style={styles.actions}>
+
+      <DailyCard
+        date={today}
+        best={progress.daily[today]}
+        streak={dailyStreak(progress, today)}
+        onPress={() => onDaily(today)}
+      />
+
+      <View style={styles.campaign}>
+        {/* The real next board, so the campaign shows what it is instead of describing it. */}
+        <Pressable
+          style={styles.previewWrap}
+          onPress={() => onPlay(level)}
+          accessibilityRole="button"
+          accessibilityLabel={`Preview of level ${level}. Play`}>
+          <BoardPreview level={next} size={previewSize} />
+        </Pressable>
+        <Text style={styles.level}>Level {level}</Text>
+        <Text style={styles.summary}>
+          {totalStars(progress)} stars · {totalScore(progress).toLocaleString()} points
+        </Text>
         <Button
           testID="play-button"
-          label={`Play level ${progress.unlocked}`}
-          onPress={() => onPlay(progress.unlocked)}
+          label={`Play level ${level}`}
+          onPress={() => onPlay(level)}
+          style={styles.play}
         />
-        <Button testID="levels-button" label="All levels" variant="ghost" onPress={onLevels} />
+        <View style={styles.row}>
+          <Button
+            testID="levels-button"
+            label="All levels"
+            variant="ghost"
+            icon={<Grid size={20} />}
+            onPress={onLevels}
+            style={styles.flex}
+          />
+          <Button
+            testID="leaderboard-button"
+            label="Leaderboard"
+            variant="ghost"
+            icon={<Podium size={20} />}
+            onPress={onLeaderboard}
+            style={styles.flex}
+          />
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  root: { flex: 1, padding: 24, justifyContent: 'space-between' },
-  topBar: { alignItems: 'flex-end' },
-  hero: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { color: colors.text, fontSize: 40, fontWeight: '800', marginTop: 20 },
-  tagline: { color: colors.muted, fontSize: 16, marginTop: 10, textAlign: 'center' },
-  stats: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  stat: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  statValue: { color: colors.text, fontSize: 24, fontWeight: '800' },
-  statLabel: { color: colors.muted, fontSize: 13, marginTop: 2 },
-  actions: { gap: 12 },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    root: { flexGrow: 1, padding: 20, gap: 28 },
+    topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    wordmark: { color: c.text, fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
+    campaign: { flex: 1, justifyContent: 'flex-end', gap: 6 },
+    previewWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 12 },
+    level: { color: c.text, fontSize: 44, fontWeight: '800', letterSpacing: -1 },
+    summary: { color: c.muted, fontSize: 15, fontVariant: ['tabular-nums'] },
+    play: { marginTop: 18 },
+    row: { flexDirection: 'row', gap: 12, marginTop: 6 },
+    flex: { flex: 1 },
+  });

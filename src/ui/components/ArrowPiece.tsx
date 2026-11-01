@@ -4,7 +4,7 @@ import { G, Path, Polygon } from 'react-native-svg';
 import { pathAhead } from '../../domain/board';
 import { Arrow, DELTA } from '../../domain/types';
 import { Bump } from '../../state/gameReducer';
-import { colors } from '../theme';
+import { usePalette } from '../theme';
 
 interface Props {
   arrow: Arrow;
@@ -29,6 +29,7 @@ export const ArrowPiece = memo(function ArrowPieceView({
   leaving,
   onLeft,
 }: Props) {
+  const colors = usePalette();
   const progress = useRef(new Animated.Value(0)).current;
   const [t, setT] = useState(0);
   const [hurt, setHurt] = useState(false);
